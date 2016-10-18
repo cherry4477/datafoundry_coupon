@@ -1,0 +1,95 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "iODafWtTiuELZeuGHTuY/jnF0sA=",
+			"path": "github.com/Shopify/sarama",
+			"revision": "e03d23b5a4fa1a72c30eace0403d7c2c3b5de55e",
+			"revisionTime": "2016-08-30T13:30:12Z"
+		},
+		{
+			"checksumSHA1": "KMBrsPu4bjLG6yULK3bW53LZi50=",
+			"path": "github.com/asiainfoLDP/datahub_commons/httputil",
+			"revision": "daa5efcf298073ba6c30aadc4b48682ba01ec1e6",
+			"revisionTime": "2016-06-29T06:51:24Z"
+		},
+		{
+			"checksumSHA1": "+C6N0/NZOwK8XaV+GXOSR8BP3Fg=",
+			"origin": "github.com/asiainfoLDP/datafoundry_plan/vendor/github.com/asiainfoLDP/datahub_commons/log",
+			"path": "github.com/asiainfoLDP/datahub_commons/log",
+			"revision": "daa5efcf298073ba6c30aadc4b48682ba01ec1e6",
+			"revisionTime": "2016-06-29T06:51:24Z"
+		},
+		{
+			"checksumSHA1": "O3m1YM5Cb9E6BLGhdqlHqR1dYt0=",
+			"path": "github.com/asiainfoLDP/datahub_commons/mq",
+			"revision": "daa5efcf298073ba6c30aadc4b48682ba01ec1e6",
+			"revisionTime": "2016-06-29T06:51:24Z"
+		},
+		{
+			"checksumSHA1": "Iz/p1UTvFNe5HFeohX7cvKEOQW0=",
+			"path": "github.com/astaxie/beego/logs",
+			"revision": "2d87d4feafeea0a133d217a82e6e02df0348fed5",
+			"revisionTime": "2016-09-22T15:18:45Z"
+		},
+		{
+			"checksumSHA1": "NFEOKUd0iCv0NSJ64Ykt6ttihTQ=",
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "y2Kh4iPlgCPXSGTCcFpzePYdzzg=",
+			"path": "github.com/eapache/go-resiliency/breaker",
+			"revision": "b86b1ec0dd4209a588dc1285cdd471e73525c0b3",
+			"revisionTime": "2016-01-04T19:15:39Z"
+		},
+		{
+			"checksumSHA1": "WHl96RVZlOOdF4Lb1OOadMpw8ls=",
+			"path": "github.com/eapache/go-xerial-snappy",
+			"revision": "bb955e01b9346ac19dc29eb16586c90ded99a98c",
+			"revisionTime": "2016-06-09T14:24:08Z"
+		},
+		{
+			"checksumSHA1": "oCCs6kDanizatplM5e/hX76busE=",
+			"path": "github.com/eapache/queue",
+			"revision": "44cc805cf13205b55f69e14bcb69867d1ae92f98",
+			"revisionTime": "2016-08-05T00:47:13Z"
+		},
+		{
+			"checksumSHA1": "5EDo3sfuw3z3z0kpnreuTfSxmfg=",
+			"path": "github.com/go-sql-driver/mysql",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "OzddgAh0uv3ukKhWW7QFUEFbxow=",
+			"path": "github.com/golang/snappy",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "ZlMAbft1P8lvlCXZkmBFIDip1kk=",
+			"path": "github.com/julienschmidt/httprouter",
+			"revision": "fb79d6a91d3e4a9ecb6d945b218d78fc0d9b1939",
+			"revisionTime": "2016-07-11T18:09:06Z"
+		},
+		{
+			"checksumSHA1": "hX+j017F4PEtIUGflAneDtLC6hs=",
+			"path": "github.com/klauspost/crc32",
+			"revision": "19b0b332c9e4516a6370a0456e6182c3b5036720",
+			"revisionTime": "2016-02-19T14:26:09Z"
+		},
+		{
+			"checksumSHA1": "OUZ1FFXyKs+Cfg9M9rmXqqweQck=",
+			"path": "github.com/miekg/dns",
+			"revision": "db96a2b759cdef4f11a34506a42eb8d1290c598e",
+			"revisionTime": "2016-07-26T03:20:27Z"
+		},
+		{
+			"checksumSHA1": "hi+OU7K8XoCPkmqDABsZi7vVSoE=",
+			"path": "github.com/rcrowley/go-metrics",
+			"revision": "bdb33529eca3e55eac7328e07c57012a797af602",
+			"revisionTime": "2016-07-18T16:53:37Z"
+		}
+	],
+	"rootPath": "github.com/asiainfoLDP/datafoundry_coupon"
+}
