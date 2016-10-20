@@ -19,7 +19,6 @@ var (
 
 func init() {
 	DF_HOST = os.Getenv("DATAFOUNDRY_HOST_ADDR")
-	logger.Debug("DF_HOST:%s", DF_HOST)
 	DF_API_Auth = DF_HOST + "/oapi/v1/users/~"
 
 	logger.Info("DF_HOST = %s ", DF_HOST)

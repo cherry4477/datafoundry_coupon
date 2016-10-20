@@ -103,10 +103,10 @@ func DeleteCoupon(db *sql.DB, couponId string) error {
 //}
 
 type retrieveResult struct {
-	Serial     string    `json:"serial"`
-	Expiration time.Time `json:"expiration"`
-	Amount     float32   `json:"amount"`
-	Status     string    `json:"status"`
+	Serial   string    `json:"serial"`
+	ExpireOn time.Time `json:"expire_on"`
+	Amount   float32   `json:"amount"`
+	Status   string    `json:"status"`
 }
 
 func RetrieveCouponByID(db *sql.DB, couponId string) (*retrieveResult, error) {
@@ -150,7 +150,7 @@ func queryCoupons(db *sql.DB, sqlWhere, orderBy string, limit int, offset int64,
 	}
 
 	sql_str := fmt.Sprintf(`select
-					SERIAL, EXPIRATION, AMOUNT, STATUS
+					SERIAL, EXPIRE_ON, AMOUNT, STATUS
 					from DF_COUPON
 					%s %s
 					limit %d
@@ -173,7 +173,7 @@ func queryCoupons(db *sql.DB, sqlWhere, orderBy string, limit int, offset int64,
 	for rows.Next() {
 		coupon := &retrieveResult{}
 		err := rows.Scan(
-			&coupon.Serial, &coupon.Expiration, &coupon.Amount, &coupon.Status,
+			&coupon.Serial, &coupon.ExpireOn, &coupon.Amount, &coupon.Status,
 		)
 		if err != nil {
 			return nil, err

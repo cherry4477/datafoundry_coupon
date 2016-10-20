@@ -68,8 +68,19 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 
 func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	logger.Info("Request url: DELETE %v.", r.URL)
-
 	logger.Info("Begin delete coupon handler.")
+
+	username, e := validateAuth(r.Header.Get("Authorization"))
+	if e != nil {
+		JsonResult(w, http.StatusUnauthorized, e, nil)
+		return
+	}
+	logger.Debug("username:%v", username)
+
+	if !canEditSaasApps(username) {
+		JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
+		return
+	}
 
 	db := models.GetDB()
 	if db == nil {
@@ -133,8 +144,14 @@ func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 //
 func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	logger.Info("Request url: GET %v.", r.URL)
-
 	logger.Info("Begin retrieve coupon handler.")
+
+	username, e := validateAuth(r.Header.Get("Authorization"))
+	if e != nil {
+		JsonResult(w, http.StatusUnauthorized, e, nil)
+		return
+	}
+	logger.Debug("username:%v", username)
 
 	db := models.GetDB()
 	if db == nil {
@@ -147,7 +164,7 @@ func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 	coupon, err := models.RetrieveCouponByID(db, couponId)
 	if err != nil {
 		logger.Error("Get coupon err: %v", err)
-		JsonResult(w, http.StatusInternalServerError, GetError(ErrorCodeGetCoupon), nil)
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeGetCoupon, err.Error()), nil)
 		return
 	}
 
@@ -157,8 +174,19 @@ func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 
 func QueryCouponList(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	logger.Info("Request url: GET %v.", r.URL)
-
 	logger.Info("Begin retrieve coupon list handler.")
+
+	username, e := validateAuth(r.Header.Get("Authorization"))
+	if e != nil {
+		JsonResult(w, http.StatusUnauthorized, e, nil)
+		return
+	}
+	logger.Debug("username:%v", username)
+
+	if !canEditSaasApps(username) {
+		JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
+		return
+	}
 
 	db := models.GetDB()
 	if db == nil {
@@ -195,6 +223,13 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 		JsonResult(w, http.StatusInternalServerError, GetError(ErrorCodeDbNotInitlized), nil)
 		return
 	}
+
+	username, e := validateAuth(r.Header.Get("Authorization"))
+	if e != nil {
+		JsonResult(w, http.StatusUnauthorized, e, nil)
+		return
+	}
+	logger.Debug("username:%v", username)
 
 	serial := params.ByName("serial")
 	code := params.ByName("code")
