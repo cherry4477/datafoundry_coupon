@@ -373,7 +373,8 @@ type UseInfo struct {
 }
 
 type useResult struct {
-	Amount float32
+	Amount    float32 `json:"amount"`
+	Namespace string  `json:"namespace"`
 }
 
 func UseCoupon(db *sql.DB, useInfo *UseInfo) (interface{}, error) {
@@ -382,37 +383,39 @@ func UseCoupon(db *sql.DB, useInfo *UseInfo) (interface{}, error) {
 	useInfo.Serial = strings.ToLower(useInfo.Serial)
 	useInfo.Code = strings.ToLower(useInfo.Code)
 
-	sql := "SELECT AMOUNT, EXPIRATION, STATUS FROM DF_COUPON WHERE SERIAL=? AND CODE=?"
+	sql := "SELECT AMOUNT, EXPIRE_ON, STATUS FROM DF_COUPON WHERE SERIAL=? AND CODE=?"
 	row := db.QueryRow(sql, useInfo.Serial, useInfo.Code)
 	logger.Info(">>>\n%v\n%v, %v", sql, useInfo.Serial, useInfo.Code)
 
 	var amount float32
-	var expiration time.Time
+	var expireOn time.Time
 	var status string
-	err := row.Scan(&amount, &expiration, &status)
+	err := row.Scan(&amount, &expireOn, &status)
 	if err != nil {
+		logger.Error("Scan err : %v", err)
 		return nil, err
 	}
-	logger.Debug("expiration=%v, amount=%v, status=%v", expiration, amount, status)
+	logger.Debug("expireOn=%v, amount=%v, status=%v", expireOn, amount, status)
 
 	if status == "expired" {
 		return nil, errors.New("The coupon has expired.")
 	} else if status == "used" {
 		return nil, errors.New("The coupon has used.")
-	} else {
+	} else if status == "unavailable" {
 		return nil, errors.New("The coupon unavailable.")
 	}
 
 	useInfo.Use_time = useInfo.Use_time.UTC().Add(time.Hour * 8)
 	logger.Debug("use time: %v", useInfo.Use_time)
 
-	duration := expiration.Sub(useInfo.Use_time)
+	duration := expireOn.Sub(useInfo.Use_time)
 	logger.Debug("duration: %v", duration)
 
 	if duration < 0 {
 		sql = "UPDATE DF_COUPON SET STATUS='expired' WHERE SERIAL=? AND CODE=?"
 		_, err := db.Exec(sql, useInfo.Serial, useInfo.Code)
 		if err != nil {
+			logger.Error("Exec err : %v", err)
 			return nil, err
 		}
 		logger.Info(">>>\n%v\n%v, %v", sql, useInfo.Serial, useInfo.Code)
@@ -422,12 +425,13 @@ func UseCoupon(db *sql.DB, useInfo *UseInfo) (interface{}, error) {
 	sql = "UPDATE DF_COUPON SET USE_TIME=?, USERNAME=?, NAMESPACE=?, STATUS=? WHERE SERIAL=? AND CODE=?"
 	_, err = db.Exec(sql, useInfo.Use_time, useInfo.Username, useInfo.Namespace, "used", useInfo.Serial, useInfo.Code)
 	if err != nil {
+		logger.Error("Exec err : %v", err)
 		return nil, err
 	}
 	logger.Info(">>>\n%v\n%v, %v, %v, %v, %v", sql,
 		useInfo.Use_time, useInfo.Username, useInfo.Namespace, useInfo.Serial, useInfo.Code)
 
-	useResult := useResult{Amount: amount}
+	useResult := useResult{Amount: amount, Namespace: useInfo.Namespace}
 
 	logger.Info("End use a coupon model.")
 	return useResult, err

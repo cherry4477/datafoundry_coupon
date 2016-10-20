@@ -232,20 +232,19 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 	logger.Debug("username:%v", username)
 
 	serial := params.ByName("serial")
-	code := params.ByName("code")
 
-	rechargeInfo := &models.UseInfo{}
-	err := common.ParseRequestJsonInto(r, rechargeInfo)
+	useInfo := &models.UseInfo{}
+	err := common.ParseRequestJsonInto(r, useInfo)
 	if err != nil {
 		logger.Error("Parse body err: %v", err)
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeParseJsonFailed, err.Error()), nil)
 		return
 	}
-	rechargeInfo.Serial = serial
-	rechargeInfo.Code = code
-	rechargeInfo.Use_time = time.Now()
+	useInfo.Serial = serial
+	useInfo.Username = username
+	useInfo.Use_time = time.Now()
 
-	result, err := models.UseCoupon(db, rechargeInfo)
+	result, err := models.UseCoupon(db, useInfo)
 	if err != nil {
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeUseCoupon, err.Error()), nil)
 		return
