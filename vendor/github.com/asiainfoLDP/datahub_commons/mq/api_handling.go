@@ -16,22 +16,22 @@ func (mq *KafukaMQ) EnableApiHandling(localServerPort int, consumeTopic string, 
 	if err != nil {
 		// kafka will fail to consumer a non-existed topic, so we try to create it by send a message
 		// this message will be ignored
-		partition, offset2, err2 := mq.SendSyncMessage(arl.consumeTopic, []byte(""), []byte(""))		
+		partition, offset2, err2 := mq.SendSyncMessage(arl.consumeTopic, []byte(""), []byte(""))
 		if err2 != nil {
 			log.DefaultlLogger().Warningf("EnableApiHandling error: %s", err.Error())
 			return err
 		}
-		
+
 		// try again
 		arl.partition = partition
 		err = mq.SetMessageListener(arl.consumeTopic, arl.partition, offset2, arl)
-		
+
 		if err != nil {
 			log.DefaultlLogger().Warningf("EnableApiHandling error: %s", err.Error())
 			return err
 		}
 	}
-	
+
 	mq.apiRequestListener = arl
 
 	return nil
@@ -70,10 +70,10 @@ func newApiRequestListener(mq MessageQueue, localServerPort int, consumeTopic st
 
 func (listener *ApiRequestListener) OnMessage(topic string, partition int32, offset int64, key, value []byte) bool {
 	//log.DefaultlLogger().Debugf("(%d) Message consuming key: %s, value %s", offset, string(key), string(value))
-	if len(key) ==0 && len(value) == 0 {
+	if len(key) == 0 && len(value) == 0 {
 		return true // this is a message to create a topic, so it will be ignored
 	}
-	
+
 	mq_request, err := DecodeRequest(value)
 	if mq_request == nil {
 		log.DefaultlLogger().Errorf("bad message api request [%d]: %s", len(value), string(value))
@@ -117,7 +117,7 @@ func (listener *ApiRequestListener) OnMessage(topic string, partition int32, off
 	}
 
 	listener.mq.SendAsyncMessage(mq_request.ResponseTopic, []byte(""), data)
-	
+
 	return true
 }
 

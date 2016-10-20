@@ -9,7 +9,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	//"github.com/yaxinlx/sarama"
-	
+
 	//"github.com/wvanbergen/kafka/consumergroup"
 	//"github.com/wvanbergen/kazoo-go"
 
@@ -38,8 +38,8 @@ type MessageQueue interface {
 type MassageListener interface {
 	// return whether or not the offset will be marked in server
 	OnMessage(topic string, partition int32, offset int64, key, value []byte) bool
-	
-	// return whether or not to stop listenning 
+
+	// return whether or not to stop listenning
 	OnError(error) bool
 }
 
@@ -161,10 +161,10 @@ func NewMQ(brokerList []string /*, zookeepers string*/ /*, c *Config*/) (Message
 	mq.activeConsumers = make(map[string]*KafukaComsumer)
 
 	//go mq.run()
-	
+
 	go func() {
 		//sarama.Logger = log.New(os.Stdout, "[sarama] ", log.LstdFlags)
-		
+
 		for err := range mq.asyncProducer.Errors() {
 			logger.DefaultLogger().Warningf("mq.syncProducer err: %s", err.Error())
 		}
@@ -262,7 +262,7 @@ func (mq *KafukaMQ) createMessageConsumer(topic string, partition int32, offset 
 	}
 
 	pom, err := mq.offsetManager.ManagePartition(topic, partition)
-	for err != nil {		
+	for err != nil {
 		return nil, fmt.Errorf("ManagePartition, error: %s", err.Error())
 	}
 
@@ -285,7 +285,7 @@ func (mq *KafukaMQ) createMessageConsumer(topic string, partition int32, offset 
 	}
 
 	pc, err := mq.consumer.ConsumePartition(topic, partition, offset)
-	for err != nil {		
+	for err != nil {
 		pom.Close()
 		return nil, fmt.Errorf("ConsumePartition, error: %s", err.Error())
 	}

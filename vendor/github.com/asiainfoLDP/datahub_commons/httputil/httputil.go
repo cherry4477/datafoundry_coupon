@@ -1,10 +1,10 @@
 package httputil
 
 import (
-	"net/http"
-	"time"
-	"sync"
 	"errors"
+	"net/http"
+	"sync"
+	"time"
 
 	"github.com/asiainfoLDP/datahub_commons/log"
 )

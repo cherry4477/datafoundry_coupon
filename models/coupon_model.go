@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -11,7 +12,6 @@ type Coupon struct {
 	Id         int
 	Serial     string    `json:"serial"`
 	Code       string    `json:"code"`
-	time.Month
 	Expiration time.Time `json:"expiration,omitempty"`
 	Region     string    `json:"region,omitempty"`
 	Amount     float32   `json:"amount,omitempty"`
@@ -39,27 +39,34 @@ type Result struct {
 	Status          string    `json:"status,omitempty"`
 }
 
-type CreateResult struct {
+type UseInfo struct {
+	Serial    string    `json:"serial"`
+	Code      string    `json:"code"`
+	Username  string    `json:"username"`
+	Namespace string    `json:"namespace"`
+	Use_time  time.Time `json:"recharge_time"`
+}
+
+type createResult struct {
 	Serial string `json:"serial"`
 	Code   string `json:"code"`
 }
 
-func CreateCoupon(db *sql.DB, couponInfo *Coupon) (CreateResult, error) {
+func CreateCoupon(db *sql.DB, couponInfo *Coupon) (createResult, error) {
 	logger.Info("Begin create a Coupon model.")
 
 	//nowstr := time.Now().Format("2006-01-02 15:04:05.999999")
 	sqlstr := fmt.Sprintf(`insert into DF_COUPON (
-				SERIAL, CODE, EXPIRATION, REGION, AMOUNT
-				) values (?, ?, ?, ?, ?)`,
+				SERIAL, CODE, EXPIRATION, REGION, AMOUNT, STATUS
+				) values (?, ?, ?, ?, ?, ?)`,
 	)
 
 	_, err := db.Exec(sqlstr,
-		couponInfo.Serial, couponInfo.Code, couponInfo.Expiration.Format("2006-01-02 15:04:05.999999"), couponInfo.Region, couponInfo.Amount,
+		couponInfo.Serial, couponInfo.Code, couponInfo.Expiration,
+		couponInfo.Region, couponInfo.Amount, "available",
 	)
 
-	result := CreateResult{}
-	result.Serial = couponInfo.Serial
-	result.Code = couponInfo.Code
+	result := createResult{Serial: couponInfo.Serial, Code: couponInfo.Code}
 
 	logger.Info("End create a plan model.")
 	return result, err
@@ -370,4 +377,52 @@ func RetrievePlanRegion(db *sql.DB) ([]PlanRegion, error) {
 	logger.Info("Model end get plan region.")
 
 	return regions, err
+}
+
+type useResult struct {
+	Amount float32
+}
+
+func UseCoupon(db *sql.DB, useInfo *UseInfo) (interface{}, error) {
+	logger.Info("Begin use a coupon model.")
+
+	sql := "SELECT AMOUNT, EXPIRATION, CREATE_AT, USE_TIME FROM DF_COUPON WHERE SERIAL=? AND CODE=?"
+	row := db.QueryRow(sql, useInfo.Serial, useInfo.Code)
+
+	var expiration time.Time
+	var amount float32
+	row.Scan(&amount, &expiration)
+
+	logger.Info(">>>\n%v\n%v, %v", sql, useInfo.Serial, useInfo.Code)
+
+	useInfo.Use_time = useInfo.Use_time.UTC().Add(time.Hour * 8)
+	logger.Debug("use time: %v", useInfo.Use_time)
+
+	duration := expiration.Sub(useInfo.Use_time)
+	logger.Debug("duration: %v", duration)
+
+	if expiration.Sub(useInfo.Use_time) < 0 {
+		sql = "UPDATE DF_COUPON SET STATUS='expired' WHERE SERIAL=? AND CODE=?"
+		_, err := db.Exec(sql, useInfo.Serial, useInfo.Code)
+		if err != nil {
+			return nil, err
+		}
+
+		logger.Info(">>>\n%v\n%v, %v", sql, useInfo.Serial, useInfo.Code)
+		return nil, errors.New("The coupon has expired.")
+	}
+
+	sql = "UPDATE DF_COUPON SET USE_TIME=?, USERNAME=?, NAMESPACE=?, STATUS=? WHERE SERIAL=? AND CODE=?"
+	_, err := db.Exec(sql, useInfo.Use_time, useInfo.Username, useInfo.Namespace, "used", useInfo.Serial, useInfo.Code)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Info(">>>\n%v\n%v, %v, %v, %v, %v", sql,
+		useInfo.Use_time, useInfo.Username, useInfo.Namespace, useInfo.Serial, useInfo.Code)
+
+	useResult := useResult{Amount: amount}
+
+	logger.Info("End use a coupon model.")
+	return useResult, err
 }

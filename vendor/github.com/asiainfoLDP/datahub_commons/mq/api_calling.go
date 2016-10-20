@@ -18,12 +18,12 @@ func (mq *KafukaMQ) EnableApiCalling(consumeTopic string) error {
 		// kafka will fail to consumer a non-existed topic, so we try to create it by send a message
 		// this message will be ignored
 		partition, offset2, err2 := mq.SendSyncMessage(apl.consumeTopic, []byte(""), []byte(""))
-		
+
 		if err2 != nil {
 			log.DefaultlLogger().Warningf("EnableApiCalling error: %s", err.Error())
 			return err
 		}
-		
+
 		// try again
 		apl.partition = partition
 		err = mq.SetMessageListener(apl.consumeTopic, apl.partition, offset2, apl)
@@ -32,7 +32,7 @@ func (mq *KafukaMQ) EnableApiCalling(consumeTopic string) error {
 			return err
 		}
 	}
-	
+
 	mq.apiResponseListener = apl
 
 	return nil
@@ -94,7 +94,7 @@ func (mq *KafukaMQ) SyncApiRequest(sendTopic string, key []byte, req *http.Reque
 			if mq_response.HttpReponse != nil {
 				return mq_response.HttpReponse, nil
 			}
-			
+
 			err = fmt.Errorf("Response error: %d %s", mq_response.StatusCode, mq_response.StatusMessage)
 		} else {
 			err = errors.New("Response unknow error")
@@ -137,10 +137,10 @@ func newApiResponseListener(consumeTopic string) *ApiResponseListener {
 
 func (listener *ApiResponseListener) OnMessage(topic string, partition int32, offset int64, key, value []byte) bool {
 	//log.DefaultlLogger().Debugf("(%d) Message consuming key: %s, value %s", offset, string(key), string(value))
-	if len(key) ==0 && len(value) == 0 {
+	if len(key) == 0 && len(value) == 0 {
 		return true // this is a message to create a topic, so it will be ignored
 	}
-	
+
 	mq_response, mq_request, err := DecodeResponse(value, listener)
 	if err != nil {
 		log.DefaultlLogger().Errorf("bad message api response, error: %s", err.Error())
@@ -158,14 +158,14 @@ func (listener *ApiResponseListener) OnMessage(topic string, partition int32, of
 		log.DefaultlLogger().Errorf("bad message api response (mq_request.SyncedResponse == nil): %s", string(value))
 		return true
 	}
-	
+
 	//mq_response.topic = topic // must be listener.consumeTopic
 	//mq_response.partition = partition // must be listener.partition
 	//mq_response.offset = offset
 	//mq_response.key = key
-	
+
 	mq_request.SyncedResponse <- mq_response
-	
+
 	return true
 }
 

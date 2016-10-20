@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 	//"os"
-	"strings"
 	"runtime"
+	"strings"
 )
 
 const (
@@ -61,11 +61,11 @@ func NewLoggerWithLevel(name string, level int) *Logger {
 	return &Logger{name: name, level: level}
 }
 
-func (l *Logger)Name() string {
+func (l *Logger) Name() string {
 	return l.name
 }
 
-func (l *Logger)Level() int {
+func (l *Logger) Level() int {
 	return l.level
 }
 
@@ -224,8 +224,7 @@ func now(level string, logName string, depth int) string {
 		}
 		return fmt.Sprintf("[%s][%s][%s][%s:%d %s] ", nowstr, logName, level, file, line, funcname)
 	}
-	
-	
+
 	return fmt.Sprintf("[%s][%s][%s]", nowstr, logName, level)
 }
 
@@ -248,7 +247,6 @@ func caller(logName string, depth int) string {
 		}
 		return fmt.Sprintf("%s[%s:%d %s] ", logName, file, line, funcname)
 	}
-	
+
 	return logName
 }
-

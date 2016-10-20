@@ -1,27 +1,26 @@
 package handler
 
 import (
-	"crypto/rand"
-	"fmt"
 	"github.com/asiainfoLDP/datafoundry_coupon/api"
 	"github.com/asiainfoLDP/datafoundry_coupon/common"
 	"github.com/asiainfoLDP/datafoundry_coupon/log"
 	"github.com/asiainfoLDP/datafoundry_coupon/models"
 	"github.com/julienschmidt/httprouter"
-	mathrand "math/rand"
+	"math/rand"
 	"net/http"
 	"time"
 )
 
+const letterBytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
 var logger = log.GetLogger()
 
-func init() {
-	mathrand.Seed(time.Now().UnixNano())
-}
+//func init() {
+//	mathrand.Seed(time.Now().UnixNano())
+//}
 
 func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	logger.Info("Request url: POST %v.", r.URL)
-
 	logger.Info("Begin create coupon handler.")
 
 	db := models.GetDB()
@@ -42,18 +41,18 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	coupon.Serial = genUUID()
 	coupon.Code = genUUID()
 
-	logger.Debug("plan: %v", coupon)
+	logger.Debug("coupon: %v", coupon)
 
-	//create plan in database
-	planId, err := models.CreateCoupon(db, coupon)
+	//create coupon in database
+	result, err := models.CreateCoupon(db, coupon)
 	if err != nil {
 		logger.Error("Create plan err: %v", err)
-		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeCreatePlan, err.Error()), nil)
+		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeCreateCoupon, err.Error()), nil)
 		return
 	}
 
 	logger.Info("End create coupon handler.")
-	api.JsonResult(w, http.StatusOK, nil, planId)
+	api.JsonResult(w, http.StatusOK, nil, result)
 }
 
 //func DeletePlan(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -197,16 +196,47 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 //	api.JsonResult(w, http.StatusOK, nil, regions)
 //}
 
-func genUUID() string {
-	bs := make([]byte, 16)
-	_, err := rand.Read(bs)
-	if err != nil {
-		logger.Warn("genUUID error: ", err.Error())
+func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	logger.Info("Request url: PUT %v.", r.URL)
+	logger.Info("Begin use a coupon handler.")
 
-		mathrand.Read(bs)
+	db := models.GetDB()
+	if db == nil {
+		logger.Warn("Get db is nil.")
+		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
+		return
 	}
 
-	return fmt.Sprintf("%X-%X-%X-%X-%X", bs[0:4], bs[4:6], bs[6:8], bs[8:10], bs[10:])
+	serial := params.ByName("serial")
+	code := params.ByName("code")
+
+	rechargeInfo := &models.UseInfo{}
+	err := common.ParseRequestJsonInto(r, rechargeInfo)
+	if err != nil {
+		logger.Error("Parse body err: %v", err)
+		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeParseJsonFailed, err.Error()), nil)
+		return
+	}
+	rechargeInfo.Serial = serial
+	rechargeInfo.Code = code
+	rechargeInfo.Use_time = time.Now()
+
+	result, err := models.UseCoupon(db, rechargeInfo)
+	if err != nil {
+		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeUseCoupon, err.Error()), nil)
+		return
+	}
+
+	logger.Info("End use a coupon handler.")
+	api.JsonResult(w, http.StatusOK, nil, result)
+}
+
+func genUUID() string {
+	b := make([]byte, 10)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }
 
 //func validateAppProvider(provider string, musBeNotBlank bool) (string, *Error) {
