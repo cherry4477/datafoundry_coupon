@@ -31,7 +31,7 @@ const (
 	ErrorCodeInvalidParameters = 1307
 	ErrorCodeCreateCoupon      = 1308
 	ErrorCodeUseCoupon         = 1309
-	//ErrorCodeDeletePlan        = 1309
+	ErrorCodeDeleteCoupon      = 1310
 	//ErrorCodeModifyPlan        = 1310
 	//ErrorCodeGetPlan           = 1311
 	//ErrorCodeQueryPlans        = 1312

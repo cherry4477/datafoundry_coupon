@@ -55,33 +55,33 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	api.JsonResult(w, http.StatusOK, nil, result)
 }
 
-//func DeletePlan(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-//	logger.Info("Request url: DELETE %v.", r.URL)
-//
-//	logger.Info("Begin delete plan handler.")
-//
-//	db := models.GetDB()
-//	if db == nil {
-//		logger.Warn("Get db is nil.")
-//		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
-//		return
-//	}
-//
-//	planId := params.ByName("id")
-//	logger.Debug("Plan id: %s.", planId)
-//
-//	// /delete in database
-//	err := models.DeletePlan(db, planId)
-//	if err != nil {
-//		logger.Error("Delete plan err: %v", err)
-//		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeDeletePlan, err.Error()), nil)
-//		return
-//	}
-//
-//	logger.Info("End delete plan handler.")
-//	api.JsonResult(w, http.StatusOK, nil, nil)
-//}
-//
+func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	logger.Info("Request url: DELETE %v.", r.URL)
+
+	logger.Info("Begin delete coupon handler.")
+
+	db := models.GetDB()
+	if db == nil {
+		logger.Warn("Get db is nil.")
+		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
+		return
+	}
+
+	couponId := params.ByName("id")
+	logger.Debug("Coupon id: %s.", couponId)
+
+	// /delete in database
+	err := models.DeleteCoupon(db, couponId)
+	if err != nil {
+		logger.Error("Delete plan err: %v", err)
+		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeDeleteCoupon, err.Error()), nil)
+		return
+	}
+
+	logger.Info("End delete coupon handler.")
+	api.JsonResult(w, http.StatusOK, nil, nil)
+}
+
 //func ModifyPlan(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 //	logger.Info("Request url: PUT %v.", r.URL)
 //

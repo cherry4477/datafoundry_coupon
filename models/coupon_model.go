@@ -74,10 +74,10 @@ func CreateCoupon(db *sql.DB, couponInfo *Coupon) (createResult, error) {
 	return result, err
 }
 
-func DeletePlan(db *sql.DB, planId string) error {
+func DeleteCoupon(db *sql.DB, couponId string) error {
 	logger.Info("Model begin delete a plan.")
 
-	err := modifyPlanStatusToN(db, planId)
+	err := modifyCouponStatusToN(db, couponId)
 	if err != nil {
 		return err
 	}
@@ -191,8 +191,8 @@ func queryPlans(db *sql.DB, sqlWhere string, limit int, offset int64, sqlParams 
 	return plans, nil
 }
 
-func modifyPlanStatusToN(db *sql.DB, planId string) error {
-	sqlstr := fmt.Sprintf(`update DF_PLAN set status = "N" where PLAN_ID = '%s' and STATUS = 'A'`, planId)
+func modifyCouponStatusToN(db *sql.DB, couponId string) error {
+	sqlstr := fmt.Sprintf(`update DF_COUPON set status = "unavailable" where SERIAL = '%s' and STATUS = 'available'`, couponId)
 
 	_, err := db.Exec(sqlstr)
 	if err != nil {
