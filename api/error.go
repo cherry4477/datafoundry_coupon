@@ -32,9 +32,8 @@ const (
 	ErrorCodeCreateCoupon      = 1308
 	ErrorCodeUseCoupon         = 1309
 	ErrorCodeDeleteCoupon      = 1310
-	//ErrorCodeModifyPlan        = 1310
-	//ErrorCodeGetPlan           = 1311
-	//ErrorCodeQueryPlans        = 1312
+	ErrorCodeGetCoupon         = 1311
+	ErrorCodeQueryCoupons      = 1312
 
 	NumErrors = 1500 // about 12k memroy wasted
 )

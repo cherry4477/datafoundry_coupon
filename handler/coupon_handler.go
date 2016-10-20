@@ -73,7 +73,7 @@ func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	// /delete in database
 	err := models.DeleteCoupon(db, couponId)
 	if err != nil {
-		logger.Error("Delete plan err: %v", err)
+		logger.Error("Delete coupon err: %v", err)
 		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeDeleteCoupon, err.Error()), nil)
 		return
 	}
@@ -120,81 +120,59 @@ func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 //	api.JsonResult(w, http.StatusOK, nil, nil)
 //}
 //
-//func RetrievePlan(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-//	logger.Info("Request url: GET %v.", r.URL)
-//
-//	logger.Info("Begin retrieve plan handler.")
-//
-//	db := models.GetDB()
-//	if db == nil {
-//		logger.Warn("Get db is nil.")
-//		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
-//		return
-//	}
-//
-//	planId := params.ByName("id")
-//	plan, err := models.RetrievePlanByID(db, planId)
-//	if err != nil {
-//		logger.Error("Get plan err: %v", err)
-//		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeGetPlan), nil)
-//		return
-//	}
-//
-//	logger.Info("End retrieve plan handler.")
-//	api.JsonResult(w, http.StatusOK, nil, plan)
-//}
-//
-//func QueryPlanList(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-//	logger.Info("Request url: GET %v.", r.URL)
-//
-//	logger.Info("Begin retrieve plan handler.")
-//
-//	db := models.GetDB()
-//	if db == nil {
-//		logger.Warn("Get db is nil.")
-//		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
-//		return
-//	}
-//
-//	r.ParseForm()
-//
-//	region := r.Form.Get("region")
-//	ptype := r.Form.Get("type")
-//
-//	offset, size := api.OptionalOffsetAndSize(r, 30, 1, 100)
-//	orderBy := models.ValidateOrderBy(r.Form.Get("orderby"))
-//	sortOrder := models.ValidateSortOrder(r.Form.Get("sortorder"), false)
-//
-//	count, apps, err := models.QueryPlans(db, region, ptype, orderBy, sortOrder, offset, size)
-//	if err != nil {
-//		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeQueryPlans, err.Error()), nil)
-//		return
-//	}
-//
-//	logger.Info("End retrieve plan handler.")
-//	api.JsonResult(w, http.StatusOK, nil, api.NewQueryListResult(count, apps))
-//}
-//
-//func RetrievePlanRegion(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-//	logger.Info("Request url: GET %v.", r.URL)
-//
-//	logger.Info("Begin retrieve plans's region handler.")
-//
-//	db := models.GetDB()
-//	if db == nil {
-//		logger.Warn("Get db is nil.")
-//		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
-//		return
-//	}
-//
-//	regions, err := models.RetrievePlanRegion(db)
-//	if err != nil {
-//		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeGetPlansRegion), nil)
-//	}
-//
-//	logger.Info("End retrieve plans's region handler.")
-//	api.JsonResult(w, http.StatusOK, nil, regions)
-//}
+func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	logger.Info("Request url: GET %v.", r.URL)
+
+	logger.Info("Begin retrieve coupon handler.")
+
+	db := models.GetDB()
+	if db == nil {
+		logger.Warn("Get db is nil.")
+		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
+		return
+	}
+
+	couponId := params.ByName("id")
+	coupon, err := models.RetrieveCouponByID(db, couponId)
+	if err != nil {
+		logger.Error("Get coupon err: %v", err)
+		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeGetCoupon), nil)
+		return
+	}
+
+	logger.Info("End retrieve coupon handler.")
+	api.JsonResult(w, http.StatusOK, nil, coupon)
+}
+
+func QueryCouponList(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	logger.Info("Request url: GET %v.", r.URL)
+
+	logger.Info("Begin retrieve coupon list handler.")
+
+	db := models.GetDB()
+	if db == nil {
+		logger.Warn("Get db is nil.")
+		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
+		return
+	}
+
+	r.ParseForm()
+
+	kind := r.Form.Get("kind")
+
+	offset, size := api.OptionalOffsetAndSize(r, 30, 1, 100)
+	orderBy := models.ValidateOrderBy(r.Form.Get("orderby"))
+	sortOrder := models.ValidateSortOrder(r.Form.Get("sortorder"), false)
+
+	count, apps, err := models.QueryCoupons(db, kind, orderBy, sortOrder, offset, size)
+	if err != nil {
+		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeQueryCoupons, err.Error()), nil)
+		return
+	}
+
+	logger.Info("End retrieve coupon list handler.")
+	api.JsonResult(w, http.StatusOK, nil, api.NewQueryListResult(count, apps))
+}
 
 func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	logger.Info("Request url: PUT %v.", r.URL)

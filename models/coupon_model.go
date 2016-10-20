@@ -18,35 +18,27 @@ type Coupon struct {
 	Amount     float32   `json:"amount,omitempty"`
 }
 
-type PlanRegion struct {
-	Region          string `json:"region"`
-	Region_describe string `json:"region_describe"`
-	Identification  string `json:"identification"`
-}
+//type PlanRegion struct {
+//	Region          string `json:"region"`
+//	Region_describe string `json:"region_describe"`
+//	Identification  string `json:"identification"`
+//}
 
-type Result struct {
-	Id              int       `json:"id,omitempty"`
-	Plan_id         string    `json:"plan_id,omitempty"`
-	Plan_name       string    `json:"plan_name,omitempty"`
-	Plan_type       string    `json:"plan_type,omitempty"`
-	Plan_level      int       `json:"plan_level,omitempty"`
-	Specification1  string    `json:"specification1,omitempty"`
-	Specification2  string    `json:"specification2,omitempty"`
-	Price           float32   `json:"price,omitempty"`
-	Cycle           string    `json:"cycle,omitempty"`
-	Region          string    `json:"region,omitempty"`
-	Region_describe string    `json:"region_describe,omitempty"`
-	Create_time     time.Time `json:"creation_time,omitempty"`
-	Status          string    `json:"status,omitempty"`
-}
-
-type UseInfo struct {
-	Serial    string    `json:"serial"`
-	Code      string    `json:"code"`
-	Username  string    `json:"username"`
-	Namespace string    `json:"namespace"`
-	Use_time  time.Time `json:"recharge_time"`
-}
+//type Result struct {
+//	Id              int       `json:"id,omitempty"`
+//	Plan_id         string    `json:"plan_id,omitempty"`
+//	Plan_name       string    `json:"plan_name,omitempty"`
+//	Plan_type       string    `json:"plan_type,omitempty"`
+//	Plan_level      int       `json:"plan_level,omitempty"`
+//	Specification1  string    `json:"specification1,omitempty"`
+//	Specification2  string    `json:"specification2,omitempty"`
+//	Price           float32   `json:"price,omitempty"`
+//	Cycle           string    `json:"cycle,omitempty"`
+//	Region          string    `json:"region,omitempty"`
+//	Region_describe string    `json:"region_describe,omitempty"`
+//	Create_time     time.Time `json:"creation_time,omitempty"`
+//	Status          string    `json:"status,omitempty"`
+//}
 
 type createResult struct {
 	Serial string `json:"serial"`
@@ -75,14 +67,14 @@ func CreateCoupon(db *sql.DB, couponInfo *Coupon) (createResult, error) {
 }
 
 func DeleteCoupon(db *sql.DB, couponId string) error {
-	logger.Info("Model begin delete a plan.")
+	logger.Info("Begin delete a plan model.")
 
 	err := modifyCouponStatusToN(db, couponId)
 	if err != nil {
 		return err
 	}
 
-	logger.Info("Model begin delete a plan.")
+	logger.Info("End delete a plan model.")
 	return err
 }
 
@@ -111,15 +103,32 @@ func DeleteCoupon(db *sql.DB, couponId string) error {
 //	return err
 //}
 
-func RetrievePlanByID(db *sql.DB, planID string) (*Result, error) {
-	logger.Info("Model begin get a plan by id.")
-
-	logger.Info("Model end get a plan by id.")
-	return getSinglePlan(db, fmt.Sprintf("PLAN_ID = '%s' and STATUS = 'A'", planID))
+type retrieveResult struct {
+	Serial      string     `json:"serial"`
+	Code        string     `json:"code"`
+	Kind        string     `json:"kind,omitempty"`
+	Expiration  time.Time  `json:"expiration,omitempty"`
+	Region      string     `json:"region,omitempty"`
+	Amount      float32    `json:"amount,omitempty"`
+	Create_time *time.Time `json:"create_time,omitempty"`
+	Update_time *time.Time `json:"update_time,omitempty"`
+	Use_time    *time.Time `json:"use_time,omitempty"`
+	Username    *string    `json:"username,omitempty"`
+	Namespace   *string    `json:"namespace, omitempty"`
+	Status      *string    `json:"status,omitempty"`
 }
 
-func getSinglePlan(db *sql.DB, sqlWhere string) (*Result, error) {
-	apps, err := queryPlans(db, sqlWhere, 1, 0)
+func RetrieveCouponByID(db *sql.DB, couponId string) (*retrieveResult, error) {
+	logger.Info("Begin get a coupon by id model.")
+
+	couponId = strings.ToLower(couponId)
+
+	logger.Info("End get a coupon by id model.")
+	return getSinglePlan(db, fmt.Sprintf("SERIAL = '%s'", couponId))
+}
+
+func getSinglePlan(db *sql.DB, sqlWhere string) (*retrieveResult, error) {
+	apps, err := queryCoupons(db, sqlWhere, "", 1, 0)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -135,31 +144,33 @@ func getSinglePlan(db *sql.DB, sqlWhere string) (*Result, error) {
 	return apps[0], nil
 }
 
-func queryPlans(db *sql.DB, sqlWhere string, limit int, offset int64, sqlParams ...interface{}) ([]*Result, error) {
+func queryCoupons(db *sql.DB, sqlWhere, orderBy string, limit int, offset int64, sqlParams ...interface{}) ([]*retrieveResult, error) {
 	offset_str := ""
 	if offset > 0 {
 		offset_str = fmt.Sprintf("offset %d", offset)
 	}
 
+	logger.Debug("sqlWhere=%v", sqlWhere)
 	sqlWhereAll := ""
 	if sqlWhere != "" {
-		sqlWhereAll = fmt.Sprintf("WHERE P.REGION_ID=R.ID AND %s", sqlWhere)
+		sqlWhereAll = fmt.Sprintf("WHERE %s", sqlWhere)
+	} else {
+		sqlWhereAll = fmt.Sprintf(" %s", sqlWhere)
 	}
 
 	sql_str := fmt.Sprintf(`select
-					P.ID, P.PLAN_ID, P.PLAN_NAME,
-					P.PLAN_TYPE, P.PLAN_LEVEL,
-					P.SPECIFICATION1,
-					P.SPECIFICATION2,
-					P.PRICE, P.CYCLE,
-					R.REGION, R.REGION_DESCRIBE,
-					P.CREATE_TIME, P.STATUS
-					from DF_PLAN P, DF_PLAN_REGION R
-					%s
+					SERIAL, CODE, KIND,
+					EXPIRATION, REGION,
+					AMOUNT, CREATE_AT,
+					UPDATE_AT, USE_TIME,
+					USERNAME, NAMESPACE, STATUS
+					from DF_COUPON
+					%s %s
 					limit %d
 					%s
 					`,
 		sqlWhereAll,
+		orderBy,
 		limit,
 		offset_str)
 	rows, err := db.Query(sql_str, sqlParams...)
@@ -171,24 +182,26 @@ func queryPlans(db *sql.DB, sqlWhere string, limit int, offset int64, sqlParams 
 	}
 	defer rows.Close()
 
-	plans := make([]*Result, 0, 100)
+	coupons := make([]*retrieveResult, 0, 100)
 	for rows.Next() {
-		plan := &Result{}
+		coupon := &retrieveResult{}
 		err := rows.Scan(
-			&plan.Id, &plan.Plan_id, &plan.Plan_name, &plan.Plan_type, &plan.Plan_level, &plan.Specification1, &plan.Specification2,
-			&plan.Price, &plan.Cycle, &plan.Region, &plan.Region_describe, &plan.Create_time, &plan.Status,
+			&coupon.Serial, &coupon.Code, &coupon.Kind, &coupon.Expiration, &coupon.Region, &coupon.Amount,
+			&coupon.Create_time, &coupon.Update_time, &coupon.Use_time, &coupon.Username, &coupon.Namespace,
+			&coupon.Status,
 		)
 		if err != nil {
 			return nil, err
 		}
 		//validateApp(s) // already done in scanAppWithRows
-		plans = append(plans, plan)
+		coupons = append(coupons, coupon)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return plans, nil
+	logger.Info("End get coupon list model.")
+	return coupons, nil
 }
 
 func modifyCouponStatusToN(db *sql.DB, couponId string) error {
@@ -202,46 +215,29 @@ func modifyCouponStatusToN(db *sql.DB, couponId string) error {
 	return err
 }
 
-func QueryPlans(db *sql.DB, region, ptype, orderBy string, sortOrder bool, offset int64, limit int) (int64, []*Result, error) {
-	logger.Info("Model begin get plan list.")
-	defer logger.Info("Model end get plan list.")
+func QueryCoupons(db *sql.DB, kind, orderBy string, sortOrder bool, offset int64, limit int) (int64, []*retrieveResult, error) {
+	logger.Info("Begin get coupon list model.")
 
 	sqlParams := make([]interface{}, 0, 4)
 
 	// ...
 
-	sqlWhere := "STATUS = 'A'"
-	region = strings.ToLower(region)
-	if region != "" {
-
-		regionId, err := getRegionId(db, region)
-		if err != nil {
-			return 0, nil, err
-		}
-
+	sqlWhere := ""
+	kind = strings.ToLower(kind)
+	if kind != "" {
 		if sqlWhere == "" {
-			sqlWhere = "REGION_ID = ?"
+			sqlWhere = "KIND = ?"
 		} else {
-			sqlWhere = sqlWhere + " and REGION_ID = ?"
+			sqlWhere = sqlWhere + " and KIND = ?"
 		}
-		sqlParams = append(sqlParams, regionId)
-	}
-
-	ptype = strings.ToLower(ptype)
-	if ptype != "" {
-		if sqlWhere == "" {
-			sqlWhere = "PLAN_TYPE = ?"
-		} else {
-			sqlWhere = sqlWhere + " and PLAN_TYPE = ?"
-		}
-		sqlParams = append(sqlParams, ptype)
+		sqlParams = append(sqlParams, kind)
 	}
 
 	// ...
 
 	switch strings.ToLower(orderBy) {
 	default:
-		orderBy = "CREATE_TIME"
+		orderBy = "CREATE_AT"
 		sortOrder = false
 	case "createtime":
 		orderBy = "CREATE_TIME"
@@ -253,22 +249,23 @@ func QueryPlans(db *sql.DB, region, ptype, orderBy string, sortOrder bool, offse
 
 	// ...
 
-	return getPlanList(db, offset, limit, sqlWhere, sqlSort, sqlParams...)
+	logger.Debug("sqlWhere=%v", sqlWhere)
+	return getCouponList(db, offset, limit, sqlWhere, sqlSort, sqlParams...)
 }
 
-func getRegionId(db *sql.DB, region string) (int, error) {
-	sql := `SELECT ID FROM DF_PLAN_REGION WHERE REGION=?`
-
-	row := db.QueryRow(sql, region)
-
-	var regionId int
-	err := row.Scan(&regionId)
-	if err != nil {
-		return 0, err
-	}
-
-	return regionId, err
-}
+//func getRegionId(db *sql.DB, region string) (int, error) {
+//	sql := `SELECT ID FROM DF_PLAN_REGION WHERE REGION=?`
+//
+//	row := db.QueryRow(sql, region)
+//
+//	var regionId int
+//	err := row.Scan(&regionId)
+//	if err != nil {
+//		return 0, err
+//	}
+//
+//	return regionId, err
+//}
 
 const (
 	SortOrder_Asc  = "asc"
@@ -301,29 +298,30 @@ func ValidateOrderBy(orderBy string) string {
 	return ""
 }
 
-func getPlanList(db *sql.DB, offset int64, limit int, sqlWhere string, sqlSort string, sqlParams ...interface{}) (int64, []*Result, error) {
+func getCouponList(db *sql.DB, offset int64, limit int, sqlWhere string, sqlSort string, sqlParams ...interface{}) (int64, []*retrieveResult, error) {
 	//if strings.TrimSpace(sqlWhere) == "" {
 	//	return 0, nil, errors.New("sqlWhere can't be blank")
 	//}
 
-	count, err := queryPlansCount(db, sqlWhere, sqlParams...)
+	count, err := queryCouponsCount(db, sqlWhere, sqlParams...)
 	logger.Debug("count: %v", count)
 	if err != nil {
 		return 0, nil, err
 	}
 	if count == 0 {
-		return 0, []*Result{}, nil
+		return 0, []*retrieveResult{}, nil
 	}
 	validateOffsetAndLimit(count, &offset, &limit)
 
-	subs, err := queryPlans(db,
-		fmt.Sprintf(`%s order by %s`, sqlWhere, sqlSort),
+	logger.Debug("sqlWhere=%v", sqlWhere)
+	subs, err := queryCoupons(db, sqlWhere,
+		fmt.Sprintf(`order by %s`, sqlSort),
 		limit, offset, sqlParams...)
 
 	return count, subs, err
 }
 
-func queryPlansCount(db *sql.DB, sqlWhere string, sqlParams ...interface{}) (int64, error) {
+func queryCouponsCount(db *sql.DB, sqlWhere string, sqlParams ...interface{}) (int64, error) {
 	sqlWhere = strings.TrimSpace(sqlWhere)
 	sql_where_all := ""
 	if sqlWhere != "" {
@@ -331,7 +329,7 @@ func queryPlansCount(db *sql.DB, sqlWhere string, sqlParams ...interface{}) (int
 	}
 
 	count := int64(0)
-	sql_str := fmt.Sprintf(`select COUNT(*) from DF_PLAN %s`, sql_where_all)
+	sql_str := fmt.Sprintf(`select COUNT(*) from DF_COUPON %s`, sql_where_all)
 	logger.Debug(">>>\n"+
 		"	%s", sql_str)
 	logger.Debug("sqlParams: %v", sqlParams)
@@ -355,30 +353,38 @@ func validateOffsetAndLimit(count int64, offset *int64, limit *int) {
 	}
 }
 
-func RetrievePlanRegion(db *sql.DB) ([]PlanRegion, error) {
-	logger.Info("Model begin get plans region.")
+//func RetrievePlanRegion(db *sql.DB) ([]PlanRegion, error) {
+//	logger.Info("Model begin get plans region.")
+//
+//	sql := "SELECT REGION, REGION_DESCRIBE, IDENTIFICATION FROM DF_PLAN_REGION"
+//
+//	rows, err := db.Query(sql)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	regions := make([]PlanRegion, 0)
+//	var region PlanRegion
+//	for rows.Next() {
+//		err = rows.Scan(&region.Region, &region.Region_describe, &region.Identification)
+//		if err != nil {
+//			return nil, err
+//		}
+//
+//		regions = append(regions, region)
+//	}
+//
+//	logger.Info("Model end get plan region.")
+//
+//	return regions, err
+//}
 
-	sql := "SELECT REGION, REGION_DESCRIBE, IDENTIFICATION FROM DF_PLAN_REGION"
-
-	rows, err := db.Query(sql)
-	if err != nil {
-		return nil, err
-	}
-
-	regions := make([]PlanRegion, 0)
-	var region PlanRegion
-	for rows.Next() {
-		err = rows.Scan(&region.Region, &region.Region_describe, &region.Identification)
-		if err != nil {
-			return nil, err
-		}
-
-		regions = append(regions, region)
-	}
-
-	logger.Info("Model end get plan region.")
-
-	return regions, err
+type UseInfo struct {
+	Serial    string    `json:"serial"`
+	Code      string    `json:"code"`
+	Username  string    `json:"username"`
+	Namespace string    `json:"namespace"`
+	Use_time  time.Time `json:"recharge_time"`
 }
 
 type useResult struct {
