@@ -15,8 +15,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/asiainfoLDP/datafoundry_coupon/common"
-	//"github.com/asiainfoLDP/datahub_commons/log"
-	"github.com/asiainfoLDP/datafoundry_coupon/log"
 
 	"github.com/asiainfoLDP/datahub_commons/mq"
 	"github.com/astaxie/beego/logs"
@@ -45,11 +43,8 @@ var Platform = Platform_DaoCloud
 var Port int
 var Debug = false
 
-//var logger = log.GetLogger()
-
 var (
-	logger = log.GetLogger()
-	theMQ  unsafe.Pointer
+	theMQ unsafe.Pointer
 )
 
 //======================================================

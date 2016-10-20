@@ -1,7 +1,6 @@
-package handler
+package api
 
 import (
-	"github.com/asiainfoLDP/datafoundry_coupon/api"
 	"github.com/asiainfoLDP/datafoundry_coupon/common"
 	"github.com/asiainfoLDP/datafoundry_coupon/log"
 	"github.com/asiainfoLDP/datafoundry_coupon/models"
@@ -26,7 +25,19 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	db := models.GetDB()
 	if db == nil {
 		logger.Warn("Get db is nil.")
-		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
+		JsonResult(w, http.StatusInternalServerError, GetError(ErrorCodeDbNotInitlized), nil)
+		return
+	}
+
+	username, e := validateAuth(r.Header.Get("Authorization"))
+	if e != nil {
+		JsonResult(w, http.StatusUnauthorized, e, nil)
+		return
+	}
+	logger.Debug("username:%v", username)
+
+	if !canEditSaasApps(username) {
+		JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
 		return
 	}
 
@@ -34,7 +45,7 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	err := common.ParseRequestJsonInto(r, coupon)
 	if err != nil {
 		logger.Error("Parse body err: %v", err)
-		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeParseJsonFailed, err.Error()), nil)
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeParseJsonFailed, err.Error()), nil)
 		return
 	}
 
@@ -47,12 +58,12 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	result, err := models.CreateCoupon(db, coupon)
 	if err != nil {
 		logger.Error("Create plan err: %v", err)
-		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeCreateCoupon, err.Error()), nil)
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeCreateCoupon, err.Error()), nil)
 		return
 	}
 
 	logger.Info("End create coupon handler.")
-	api.JsonResult(w, http.StatusOK, nil, result)
+	JsonResult(w, http.StatusOK, nil, result)
 }
 
 func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -63,7 +74,7 @@ func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	db := models.GetDB()
 	if db == nil {
 		logger.Warn("Get db is nil.")
-		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
+		JsonResult(w, http.StatusInternalServerError, GetError(ErrorCodeDbNotInitlized), nil)
 		return
 	}
 
@@ -74,12 +85,12 @@ func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	err := models.DeleteCoupon(db, couponId)
 	if err != nil {
 		logger.Error("Delete coupon err: %v", err)
-		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeDeleteCoupon, err.Error()), nil)
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeDeleteCoupon, err.Error()), nil)
 		return
 	}
 
 	logger.Info("End delete coupon handler.")
-	api.JsonResult(w, http.StatusOK, nil, nil)
+	JsonResult(w, http.StatusOK, nil, nil)
 }
 
 //func ModifyPlan(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -90,7 +101,7 @@ func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 //	db := models.GetDB()
 //	if db == nil {
 //		logger.Warn("Get db is nil.")
-//		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
+//		JsonResult(w, http.StatusInternalServerError, GetError(ErrorCodeDbNotInitlized), nil)
 //		return
 //	}
 //
@@ -98,7 +109,7 @@ func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 //	err := common.ParseRequestJsonInto(r, plan)
 //	if err != nil {
 //		logger.Error("Parse body err: %v", err)
-//		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeParseJsonFailed, err.Error()), nil)
+//		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeParseJsonFailed, err.Error()), nil)
 //		return
 //	}
 //	logger.Debug("Plan: %v", plan)
@@ -112,12 +123,12 @@ func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 //	err = models.ModifyPlan(db, plan)
 //	if err != nil {
 //		logger.Error("Modify plan err: %v", err)
-//		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeModifyPlan, err.Error()), nil)
+//		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeModifyPlan, err.Error()), nil)
 //		return
 //	}
 //
 //	logger.Info("End modify plan handler.")
-//	api.JsonResult(w, http.StatusOK, nil, nil)
+//	JsonResult(w, http.StatusOK, nil, nil)
 //}
 //
 func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -128,7 +139,7 @@ func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 	db := models.GetDB()
 	if db == nil {
 		logger.Warn("Get db is nil.")
-		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
+		JsonResult(w, http.StatusInternalServerError, GetError(ErrorCodeDbNotInitlized), nil)
 		return
 	}
 
@@ -136,12 +147,12 @@ func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 	coupon, err := models.RetrieveCouponByID(db, couponId)
 	if err != nil {
 		logger.Error("Get coupon err: %v", err)
-		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeGetCoupon), nil)
+		JsonResult(w, http.StatusInternalServerError, GetError(ErrorCodeGetCoupon), nil)
 		return
 	}
 
 	logger.Info("End retrieve coupon handler.")
-	api.JsonResult(w, http.StatusOK, nil, coupon)
+	JsonResult(w, http.StatusOK, nil, coupon)
 }
 
 func QueryCouponList(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -152,7 +163,7 @@ func QueryCouponList(w http.ResponseWriter, r *http.Request, params httprouter.P
 	db := models.GetDB()
 	if db == nil {
 		logger.Warn("Get db is nil.")
-		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
+		JsonResult(w, http.StatusInternalServerError, GetError(ErrorCodeDbNotInitlized), nil)
 		return
 	}
 
@@ -160,18 +171,18 @@ func QueryCouponList(w http.ResponseWriter, r *http.Request, params httprouter.P
 
 	kind := r.Form.Get("kind")
 
-	offset, size := api.OptionalOffsetAndSize(r, 30, 1, 100)
+	offset, size := OptionalOffsetAndSize(r, 30, 1, 100)
 	orderBy := models.ValidateOrderBy(r.Form.Get("orderby"))
 	sortOrder := models.ValidateSortOrder(r.Form.Get("sortorder"), false)
 
 	count, apps, err := models.QueryCoupons(db, kind, orderBy, sortOrder, offset, size)
 	if err != nil {
-		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeQueryCoupons, err.Error()), nil)
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeQueryCoupons, err.Error()), nil)
 		return
 	}
 
 	logger.Info("End retrieve coupon list handler.")
-	api.JsonResult(w, http.StatusOK, nil, api.NewQueryListResult(count, apps))
+	JsonResult(w, http.StatusOK, nil, NewQueryListResult(count, apps))
 }
 
 func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -181,7 +192,7 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 	db := models.GetDB()
 	if db == nil {
 		logger.Warn("Get db is nil.")
-		api.JsonResult(w, http.StatusInternalServerError, api.GetError(api.ErrorCodeDbNotInitlized), nil)
+		JsonResult(w, http.StatusInternalServerError, GetError(ErrorCodeDbNotInitlized), nil)
 		return
 	}
 
@@ -192,7 +203,7 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 	err := common.ParseRequestJsonInto(r, rechargeInfo)
 	if err != nil {
 		logger.Error("Parse body err: %v", err)
-		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeParseJsonFailed, err.Error()), nil)
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeParseJsonFailed, err.Error()), nil)
 		return
 	}
 	rechargeInfo.Serial = serial
@@ -201,12 +212,12 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 
 	result, err := models.UseCoupon(db, rechargeInfo)
 	if err != nil {
-		api.JsonResult(w, http.StatusBadRequest, api.GetError2(api.ErrorCodeUseCoupon, err.Error()), nil)
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeUseCoupon, err.Error()), nil)
 		return
 	}
 
 	logger.Info("End use a coupon handler.")
-	api.JsonResult(w, http.StatusOK, nil, result)
+	JsonResult(w, http.StatusOK, nil, result)
 }
 
 func genUUID() string {
@@ -215,6 +226,23 @@ func genUUID() string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
+}
+
+func validateAuth(token string) (string, *Error) {
+	if token == "" {
+		return "", GetError(ErrorCodeAuthFailed)
+	}
+
+	username, err := getDFUserame(token)
+	if err != nil {
+		return "", GetError2(ErrorCodeAuthFailed, err.Error())
+	}
+
+	return username, nil
+}
+
+func canEditSaasApps(username string) bool {
+	return username == "datafoundry"
 }
 
 //func validateAppProvider(provider string, musBeNotBlank bool) (string, *Error) {
@@ -230,7 +258,7 @@ func genUUID() string {
 //	return provider, nil
 //}
 //
-//func validateAppCategory(category string, musBeNotBlank bool) (string, *api.Error) {
+//func validateAppCategory(category string, musBeNotBlank bool) (string, *Error) {
 //	if musBeNotBlank || category != "" {
 //		// most 10 Chinese chars
 //		category_param, e := _mustStringParam("category", category, 32, StringParamType_General)

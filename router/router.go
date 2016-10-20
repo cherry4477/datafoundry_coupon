@@ -2,7 +2,6 @@ package router
 
 import (
 	"github.com/asiainfoLDP/datafoundry_coupon/api"
-	"github.com/asiainfoLDP/datafoundry_coupon/handler"
 	"github.com/asiainfoLDP/datafoundry_coupon/log"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
@@ -63,10 +62,10 @@ func InitRouter() *httprouter.Router {
 
 func NewRouter(router *httprouter.Router) {
 	logger.Info("new router.")
-	router.POST("/charge/v1/coupons", api.TimeoutHandle(500*time.Millisecond, handler.CreateCoupon))
-	router.DELETE("/charge/v1/coupons/:id", api.TimeoutHandle(500*time.Millisecond, handler.DeleteCoupon))
+	router.POST("/charge/v1/coupons", api.TimeoutHandle(500*time.Millisecond, api.CreateCoupon))
+	router.DELETE("/charge/v1/coupons/:id", api.TimeoutHandle(500*time.Millisecond, api.DeleteCoupon))
 	//router.PUT("/charge/v1/coupons/:id", api.TimeoutHandle(500*time.Millisecond, handler.ModifyPlan))
-	router.PUT("/charge/v1/coupons/use/:serial/:code", api.TimeoutHandle(500*time.Millisecond, handler.UseCoupon))
-	router.GET("/charge/v1/coupons/:id", api.TimeoutHandle(500*time.Millisecond, handler.RetrieveCoupon))
-	router.GET("/charge/v1/coupons", api.TimeoutHandle(500*time.Millisecond, handler.QueryCouponList))
+	router.PUT("/charge/v1/coupons/use/:serial/:code", api.TimeoutHandle(500*time.Millisecond, api.UseCoupon))
+	router.GET("/charge/v1/coupons/:id", api.TimeoutHandle(500*time.Millisecond, api.RetrieveCoupon))
+	router.GET("/charge/v1/coupons", api.TimeoutHandle(500*time.Millisecond, api.QueryCouponList))
 }

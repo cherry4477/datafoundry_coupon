@@ -9,13 +9,12 @@ import (
 )
 
 type Coupon struct {
-	Id         int
-	Serial     string    `json:"serial"`
-	Code       string    `json:"code"`
-	Kind       string    `json:"kind,omitempty"`
-	Expiration time.Time `json:"expiration,omitempty"`
-	Region     string    `json:"region,omitempty"`
-	Amount     float32   `json:"amount,omitempty"`
+	Id       int
+	Serial   string    `json:"serial"`
+	Code     string    `json:"code"`
+	Kind     string    `json:"kind,omitempty"`
+	ExpireOn time.Time `json:"expire_on,omitempty"`
+	Amount   float32   `json:"amount,omitempty"`
 }
 
 //type PlanRegion struct {
@@ -49,15 +48,15 @@ func CreateCoupon(db *sql.DB, couponInfo *Coupon) (createResult, error) {
 	logger.Info("Begin create a Coupon model.")
 
 	sqlstr := fmt.Sprintf(`insert into DF_COUPON (
-				SERIAL, CODE, KIND, EXPIRATION, REGION, AMOUNT, STATUS
-				) values (?, ?, ?, ?, ?, ?, ?)`,
+				SERIAL, CODE, KIND, EXPIRE_ON, AMOUNT, STATUS
+				) values (?, ?, ?, ?, ?, ?)`,
 	)
 
 	couponInfo.Serial = strings.ToLower(couponInfo.Serial)
 	couponInfo.Code = strings.ToLower(couponInfo.Code)
 	_, err := db.Exec(sqlstr,
-		couponInfo.Serial, couponInfo.Code, couponInfo.Kind, couponInfo.Expiration,
-		couponInfo.Region, couponInfo.Amount, "available",
+		couponInfo.Serial, couponInfo.Code, couponInfo.Kind, couponInfo.ExpireOn,
+		couponInfo.Amount, "available",
 	)
 
 	result := createResult{Serial: couponInfo.Serial, Code: couponInfo.Code}
@@ -104,18 +103,10 @@ func DeleteCoupon(db *sql.DB, couponId string) error {
 //}
 
 type retrieveResult struct {
-	Serial      string     `json:"serial"`
-	Code        string     `json:"code"`
-	Kind        string     `json:"kind,omitempty"`
-	Expiration  time.Time  `json:"expiration,omitempty"`
-	Region      string     `json:"region,omitempty"`
-	Amount      float32    `json:"amount,omitempty"`
-	Create_time *time.Time `json:"create_time,omitempty"`
-	Update_time *time.Time `json:"update_time,omitempty"`
-	Use_time    *time.Time `json:"use_time,omitempty"`
-	Username    *string    `json:"username,omitempty"`
-	Namespace   *string    `json:"namespace, omitempty"`
-	Status      *string    `json:"status,omitempty"`
+	Serial     string    `json:"serial"`
+	Expiration time.Time `json:"expiration"`
+	Amount     float32   `json:"amount"`
+	Status     string    `json:"status"`
 }
 
 func RetrieveCouponByID(db *sql.DB, couponId string) (*retrieveResult, error) {
@@ -159,11 +150,7 @@ func queryCoupons(db *sql.DB, sqlWhere, orderBy string, limit int, offset int64,
 	}
 
 	sql_str := fmt.Sprintf(`select
-					SERIAL, CODE, KIND,
-					EXPIRATION, REGION,
-					AMOUNT, CREATE_AT,
-					UPDATE_AT, USE_TIME,
-					USERNAME, NAMESPACE, STATUS
+					SERIAL, EXPIRATION, AMOUNT, STATUS
 					from DF_COUPON
 					%s %s
 					limit %d
@@ -186,9 +173,7 @@ func queryCoupons(db *sql.DB, sqlWhere, orderBy string, limit int, offset int64,
 	for rows.Next() {
 		coupon := &retrieveResult{}
 		err := rows.Scan(
-			&coupon.Serial, &coupon.Code, &coupon.Kind, &coupon.Expiration, &coupon.Region, &coupon.Amount,
-			&coupon.Create_time, &coupon.Update_time, &coupon.Use_time, &coupon.Username, &coupon.Namespace,
-			&coupon.Status,
+			&coupon.Serial, &coupon.Expiration, &coupon.Amount, &coupon.Status,
 		)
 		if err != nil {
 			return nil, err
