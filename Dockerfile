@@ -11,4 +11,4 @@ WORKDIR /go/src/github.com/asiainfoLDP/datafoundry_coupon
 
 RUN go build
 
-CMD ["sh", "-c", "./datafoundry_plan"]
+CMD ["sh", "-c", "./datafoundry_coupon"]
