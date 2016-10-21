@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-const letterBytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+const (
+	letterBytes = "abcdefghijklmnopqrstuvwxyz0123456789"
+	randNumber = "0123456789"
+)
+
 
 var logger = log.GetLogger()
-
-//func init() {
-//	mathrand.Seed(time.Now().UnixNano())
-//}
 
 func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	logger.Info("Request url: POST %v.", r.URL)
@@ -49,8 +49,8 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 		return
 	}
 
-	coupon.Serial = genUUID()
-	coupon.Code = genUUID()
+	coupon.Serial = "df"+genSerial()+"r"
+	coupon.Code = genCode()
 
 	logger.Debug("coupon: %v", coupon)
 
@@ -254,13 +254,22 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 	JsonResult(w, http.StatusOK, nil, result)
 }
 
-func genUUID() string {
-	b := make([]byte, 10)
+func genSerial() string {
+	b := make([]byte, 15)
+	for i := range b {
+		b[i] = randNumber[rand.Intn(len(randNumber))]
+	}
+	return string(b)
+}
+
+func genCode() string {
+	b := make([]byte, 16)
 	for i := range b {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
 }
+
 
 func validateAuth(token string) (string, *Error) {
 	if token == "" {

@@ -59,7 +59,7 @@ func CreateCoupon(db *sql.DB, couponInfo *Coupon) (createResult, error) {
 		couponInfo.Amount, "available",
 	)
 
-	result := createResult{Serial: couponInfo.Serial, Code: couponInfo.Code}
+	result := createResult{Serial: strings.ToUpper(couponInfo.Serial), Code: strings.ToUpper(couponInfo.Code)}
 
 	logger.Info("End create a plan model.")
 	return result, err
