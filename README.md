@@ -124,10 +124,11 @@ Return Result (json):
 code: 返回码
 msg: 返回信息
 data.total
-data[0].serial: 优惠券序列号
-data[0].amount: 优惠券金额
-data[0].expire_on: 到期时间
-data[0].status: 优惠券状态
+data.results
+data.results[0].serial: 优惠券序列号
+data.results[0].amount: 优惠券金额
+data.results[0].expire_on: 到期时间
+data.results[0].status: 优惠券状态
 ...
 ```
 
