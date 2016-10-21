@@ -44,7 +44,7 @@ type createResult struct {
 	Code   string `json:"code"`
 }
 
-func CreateCoupon(db *sql.DB, couponInfo *Coupon) (createResult, error) {
+func CreateCoupon(db *sql.DB, couponInfo *Coupon) (*createResult, error) {
 	logger.Info("Begin create a Coupon model.")
 
 	sqlstr := fmt.Sprintf(`insert into DF_COUPON (
@@ -58,8 +58,12 @@ func CreateCoupon(db *sql.DB, couponInfo *Coupon) (createResult, error) {
 		couponInfo.Serial, couponInfo.Code, couponInfo.Kind, couponInfo.ExpireOn,
 		couponInfo.Amount, "available",
 	)
+	if err != nil {
+		logger.Error("Exec err : %v", err)
+		return nil, err
+	}
 
-	result := createResult{Serial: strings.ToUpper(couponInfo.Serial), Code: strings.ToUpper(couponInfo.Code)}
+	result := &createResult{Serial: strings.ToUpper(couponInfo.Serial), Code: strings.ToUpper(couponInfo.Code)}
 
 	logger.Info("End create a plan model.")
 	return result, err
@@ -165,6 +169,7 @@ func queryCoupons(db *sql.DB, sqlWhere, orderBy string, limit int, offset int64,
 	logger.Info(">>> %v", sql_str)
 
 	if err != nil {
+		logger.Error("Query err : %v", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -176,12 +181,14 @@ func queryCoupons(db *sql.DB, sqlWhere, orderBy string, limit int, offset int64,
 			&coupon.Serial, &coupon.ExpireOn, &coupon.Amount, &coupon.Status,
 		)
 		if err != nil {
+			logger.Error("Scan err : %v", err)
 			return nil, err
 		}
 		//validateApp(s) // already done in scanAppWithRows
 		coupons = append(coupons, coupon)
 	}
 	if err := rows.Err(); err != nil {
+		logger.Error("Err : ", err)
 		return nil, err
 	}
 
@@ -194,6 +201,7 @@ func modifyCouponStatusToN(db *sql.DB, couponId string) error {
 
 	_, err := db.Exec(sqlstr)
 	if err != nil {
+		logger.Error("Exec err : %v", err)
 		return err
 	}
 
@@ -319,6 +327,10 @@ func queryCouponsCount(db *sql.DB, sqlWhere string, sqlParams ...interface{}) (i
 		"	%s", sql_str)
 	logger.Debug("sqlParams: %v", sqlParams)
 	err := db.QueryRow(sql_str, sqlParams...).Scan(&count)
+	if err != nil {
+		logger.Error("Scan err : %v", err)
+		return 0, err
+	}
 
 	return count, err
 }
@@ -395,7 +407,7 @@ func UseCoupon(db *sql.DB, useInfo *UseInfo) (interface{}, error) {
 		logger.Error("Scan err : %v", err)
 		return nil, err
 	}
-	logger.Debug("expireOn=%v, amount=%v, status=%v", expireOn, amount, status)
+	logger.Info("expireOn=%v, amount=%v, status=%v", expireOn, amount, status)
 
 	if status == "expired" {
 		return nil, errors.New("The coupon has expired.")
@@ -406,10 +418,10 @@ func UseCoupon(db *sql.DB, useInfo *UseInfo) (interface{}, error) {
 	}
 
 	useInfo.Use_time = useInfo.Use_time.UTC().Add(time.Hour * 8)
-	logger.Debug("use time: %v", useInfo.Use_time)
+	logger.Info("use time: %v", useInfo.Use_time)
 
 	duration := expireOn.Sub(useInfo.Use_time)
-	logger.Debug("duration: %v", duration)
+	logger.Info("duration: %v", duration)
 
 	if duration < 0 {
 		sql = "UPDATE DF_COUPON SET STATUS='expired' WHERE SERIAL=? AND CODE=?"

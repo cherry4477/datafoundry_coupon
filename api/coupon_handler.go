@@ -12,9 +12,8 @@ import (
 
 const (
 	letterBytes = "abcdefghijklmnopqrstuvwxyz0123456789"
-	randNumber = "0123456789"
+	randNumber  = "0123456789"
 )
-
 
 var logger = log.GetLogger()
 
@@ -49,7 +48,7 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 		return
 	}
 
-	coupon.Serial = "df"+genSerial()+"r"
+	coupon.Serial = "df" + genSerial() + "r"
 	coupon.Code = genCode()
 
 	logger.Debug("coupon: %v", coupon)
@@ -269,7 +268,6 @@ func genCode() string {
 	}
 	return string(b)
 }
-
 
 func validateAuth(token string) (string, *Error) {
 	if token == "" {
