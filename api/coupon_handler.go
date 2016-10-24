@@ -159,7 +159,7 @@ func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 		return
 	}
 
-	couponId := params.ByName("id")
+	couponId := params.ByName("code")
 	coupon, err := models.RetrieveCouponByID(db, couponId)
 	if err != nil {
 		logger.Error("Get coupon err: %v", err)

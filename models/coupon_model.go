@@ -119,7 +119,7 @@ func RetrieveCouponByID(db *sql.DB, couponId string) (*retrieveResult, error) {
 	couponId = strings.ToLower(couponId)
 
 	logger.Info("End get a coupon by id model.")
-	return getSinglePlan(db, fmt.Sprintf("SERIAL = '%s'", couponId))
+	return getSinglePlan(db, fmt.Sprintf("CODE = '%s'", couponId))
 }
 
 func getSinglePlan(db *sql.DB, sqlWhere string) (*retrieveResult, error) {
