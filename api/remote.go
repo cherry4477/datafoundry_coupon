@@ -1,84 +1,125 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/asiainfoLDP/datafoundry_coupon/common"
+	"github.com/asiainfoLDP/datafoundry_coupon/openshift"
+	userapi "github.com/openshift/origin/pkg/user/api/v1"
+	kapi "k8s.io/kubernetes/pkg/api/v1"
 	"net/http"
 	"os"
 )
 
-//================================================================
-//
-//================================================================
-
-var (
-	DF_HOST     string
-	DF_API_Auth string
+const (
+	GeneralRemoteCallTimeout = 10 // seconds
 )
 
-func init() {
-	DF_HOST = os.Getenv("DATAFOUNDRY_HOST_ADDR")
-	DF_API_Auth = DF_HOST + "/oapi/v1/users/~"
+//=================================================
+//get remote endpoint
+//=================================================
 
-	logger.Info("DF_HOST = %s ", DF_HOST)
-	logger.Info("DF_API_Auth = %s ", DF_API_Auth)
-}
+var (
+	RechargeSercice string
+	DataFoundryHost string
+)
 
-//================================================================
-//
-//================================================================
+func BuildServiceUrlPrefixFromEnv(name string, isHttps bool, addrEnv string, portEnv string) string {
+	addr := os.Getenv(addrEnv)
+	if addr == "" {
+		logger.Emergency("%s env should not be null", addrEnv)
 
-type ObjectMeta struct {
-	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"`
-}
-
-type User struct {
-	ObjectMeta `json:"metadata,omitempty"`
-
-	// FullName is the full name of user
-	FullName string `json:"fullName,omitempty"`
-
-	// Identities are the identities associated with this user
-	Identities []string `json:"identities"`
-
-	// Groups are the groups that this user is a member of
-	Groups []string `json:"groups"`
-}
-
-func authDF(token string) (*User, error) {
-	response, data, err := common.RemoteCall("GET", DF_API_Auth, token, "")
-	if err != nil {
-		logger.Debug("authDF error:%v", err.Error())
-		return nil, err
+	}
+	if portEnv != "" {
+		port := os.Getenv(portEnv)
+		if port != "" {
+			addr += ":" + port
+		}
 	}
 
-	// todo: use return code and msg instead
-	if response.StatusCode != http.StatusOK {
-		logger.Debug("remote (%s) status code: %d. data=%s", DF_API_Auth, response.StatusCode, string(data))
-		return nil, fmt.Errorf("remote (%s) status code: %d.", DF_API_Auth, response.StatusCode)
+	prefix := ""
+	if isHttps {
+		prefix = fmt.Sprintf("https://%s", addr)
+	} else {
+		prefix = fmt.Sprintf("http://%s", addr)
 	}
 
-	user := new(User)
-	err = json.Unmarshal(data, user)
-	if err != nil {
-		logger.Debug("authDF Unmarshal error: %s. Data: %s\n", err.Error(), string(data))
-		return nil, err
-	}
+	logger.Info("%s = %s", name, prefix)
 
-	return user, nil
+	return prefix
 }
 
-func dfUser(user *User) string {
-	return user.Name
+func InitGateWay() {
+	DataFoundryHost = BuildServiceUrlPrefixFromEnv("DataFoundryHost", true, "DATAFOUNDRY_HOST_ADDR", "")
+	openshift.Init(DataFoundryHost, os.Getenv("DATAFOUNDRY_ADMIN_USER"), os.Getenv("DATAFOUNDRY_ADMIN_PASS"))
+
+	RechargeSercice = BuildServiceUrlPrefixFromEnv("ChargeSercice", false, os.Getenv("ENV_NAME_DATAFOUNDRYRECHARGE_SERVICE_HOST"), os.Getenv("ENV_NAME_DATAFOUNDRYRECHARGE_SERVICE_PORT"))
 }
+
+//=============================================================
+//get username
+//=============================================================
 
 func getDFUserame(token string) (string, error) {
 	//Logger.Info("token = ", token)
+	//if Debug {
+	//	return "liuxu", nil
+	//}
 
 	user, err := authDF(token)
 	if err != nil {
 		return "", err
 	}
 	return dfUser(user), nil
+}
+
+func authDF(userToken string) (*userapi.User, error) {
+	if Debug {
+		return &userapi.User{
+			ObjectMeta: kapi.ObjectMeta{
+				Name: "local",
+			},
+		}, nil
+	}
+
+	u := &userapi.User{}
+	osRest := openshift.NewOpenshiftREST(openshift.NewOpenshiftClient(userToken))
+	uri := "/users/~"
+	osRest.OGet(uri, u)
+	if osRest.Err != nil {
+		logger.Info("authDF, uri(%s) error: %s", uri, osRest.Err)
+		return nil, osRest.Err
+	}
+
+	return u, nil
+}
+
+func dfUser(user *userapi.User) string {
+	return user.Name
+}
+
+//====================================================
+//call recharge api
+//====================================================
+
+func couponRecharge(adminToken, couponSerial, username, namespace string, amount float32) error {
+	body := fmt.Sprintf(
+		`{"namespace":"%s", "amount":%.3f, "reason":"%s", "user":"%s"}`,
+		namespace, amount, couponSerial, username,
+	)
+
+	//RechargeSercice1 := "http://datafoundry.recharge.app.dataos.io:80"
+	url := fmt.Sprintf("%s/charge/v1/couponrecharge", RechargeSercice)
+
+	response, data, err := common.RemoteCallWithJsonBody("POST", url, adminToken, "", []byte(body))
+	if err != nil {
+		logger.Error("recharge err: %v", err)
+		return err
+	}
+
+	if response.StatusCode != http.StatusOK {
+		logger.Info("makeRecharge remote (%s) status code: %d. data=%s", url, response.StatusCode, string(data))
+		return fmt.Errorf("makeRecharge remote (%s) status code: %d.", url, response.StatusCode)
+	}
+
+	return nil
 }

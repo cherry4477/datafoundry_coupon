@@ -4,6 +4,7 @@ import (
 	"github.com/asiainfoLDP/datafoundry_coupon/common"
 	"github.com/asiainfoLDP/datafoundry_coupon/log"
 	"github.com/asiainfoLDP/datafoundry_coupon/models"
+	"github.com/asiainfoLDP/datafoundry_coupon/openshift"
 	"github.com/julienschmidt/httprouter"
 	"math/rand"
 	"net/http"
@@ -116,7 +117,7 @@ func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 //	}
 //
 //	plan := &models.Plan{}
-//	err := common.ParseRequestJsonInto(r, plan)
+//	err := commom.ParseRequestJsonInto(r, plan)
 //	if err != nil {
 //		logger.Error("Parse body err: %v", err)
 //		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeParseJsonFailed, err.Error()), nil)
@@ -243,6 +244,20 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 	useInfo.Username = username
 	useInfo.Use_time = time.Now()
 
+	getResult, err := models.RetrieveCouponByID(db, useInfo.Code)
+	if err != nil {
+		logger.Error("db get coupon err: %v", err)
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeGetCoupon, err.Error()), nil)
+		return
+	}
+
+	err = couponRecharge(openshift.AdminToken(), serial, username, useInfo.Namespace, getResult.Amount)
+	if err != nil {
+		logger.Error("call recharge api err: %v", err)
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeCallRecharge, err.Error()), nil)
+		return
+	}
+
 	result, err := models.UseCoupon(db, useInfo)
 	if err != nil {
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeUseCoupon, err.Error()), nil)
@@ -285,29 +300,3 @@ func validateAuth(token string) (string, *Error) {
 func canEditSaasApps(username string) bool {
 	return username == "datafoundry"
 }
-
-//func validateAppProvider(provider string, musBeNotBlank bool) (string, *Error) {
-//	if musBeNotBlank || provider != "" {
-//		// most 20 Chinese chars
-//		provider_param, e := _mustStringParam("provider", provider, 60, StringParamType_General)
-//		if e != nil {
-//			return "", e
-//		}
-//		provider = provider_param
-//	}
-//
-//	return provider, nil
-//}
-//
-//func validateAppCategory(category string, musBeNotBlank bool) (string, *Error) {
-//	if musBeNotBlank || category != "" {
-//		// most 10 Chinese chars
-//		category_param, e := _mustStringParam("category", category, 32, StringParamType_General)
-//		if e != nil {
-//			return "", e
-//		}
-//		category = category_param
-//	}
-//
-//	return category, nil
-//}

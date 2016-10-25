@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/asiainfoLDP/datafoundry_coupon/api"
 	"github.com/asiainfoLDP/datafoundry_coupon/log"
 	"github.com/asiainfoLDP/datafoundry_coupon/models"
 	"github.com/asiainfoLDP/datafoundry_coupon/router"
@@ -66,4 +67,5 @@ func init() {
 
 	log.InitLog()
 
+	api.InitGateWay()
 }

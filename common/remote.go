@@ -3,24 +3,23 @@ package common
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/asiainfoLDP/datafoundry_coupon/log"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/asiainfoLDP/datahub_commons/log"
 )
 
 const (
 	GeneralRemoteCallTimeout = 10 // seconds
 )
 
-var logger = log.GetLogger()
-
 //=============================================================
 //
 //=============================================================
 
 func RemoteCallWithBody(method, url string, token, user string, body []byte, contentType string) (*http.Response, []byte, error) {
-	logger.Debug("method: %s, url: %s, token: %s, contentType: %s, body: %s", method, url, token, contentType, string(body))
+	//log.DefaultLogger().Debugf("method: %s, url: %s, token: %s, contentType: %s, body: %s", method, url, token, contentType, string(body))
 
 	var request *http.Request
 	var err error
@@ -29,6 +28,7 @@ func RemoteCallWithBody(method, url string, token, user string, body []byte, con
 	} else {
 		request, err = http.NewRequest(method, url, bytes.NewReader(body))
 	}
+
 	if err != nil {
 		return nil, nil, err
 	}
@@ -44,6 +44,7 @@ func RemoteCallWithBody(method, url string, token, user string, body []byte, con
 	client := &http.Client{
 		Timeout: time.Duration(GeneralRemoteCallTimeout) * time.Second,
 	}
+
 	response, err := client.Do(request)
 	if response != nil {
 		defer response.Body.Close()
@@ -86,7 +87,7 @@ func ParseRequestJsonAsMap(r *http.Request) (map[string]interface{}, error) {
 
 	m, err := ParseJsonToMap(data)
 	if err != nil {
-		logger.Debug("ParseJsonToMap r.Body (%s) error: %s", string(data), err.Error())
+		log.DefaultLogger().Debugf("ParseJsonToMap r.Body (%s) error: %s", string(data), err.Error())
 	}
 
 	return m, err

@@ -119,10 +119,10 @@ func RetrieveCouponByID(db *sql.DB, couponId string) (*retrieveResult, error) {
 	couponId = strings.ToLower(couponId)
 
 	logger.Info("End get a coupon by id model.")
-	return getSinglePlan(db, fmt.Sprintf("CODE = '%s'", couponId))
+	return getSingleCoupon(db, fmt.Sprintf("CODE = '%s'", couponId))
 }
 
-func getSinglePlan(db *sql.DB, sqlWhere string) (*retrieveResult, error) {
+func getSingleCoupon(db *sql.DB, sqlWhere string) (*retrieveResult, error) {
 	apps, err := queryCoupons(db, sqlWhere, "", 1, 0)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -389,7 +389,7 @@ type useResult struct {
 	Namespace string  `json:"namespace"`
 }
 
-func UseCoupon(db *sql.DB, useInfo *UseInfo) (interface{}, error) {
+func UseCoupon(db *sql.DB, useInfo *UseInfo) (*useResult, error) {
 	logger.Info("Begin use a coupon model.")
 
 	useInfo.Serial = strings.ToLower(useInfo.Serial)
@@ -443,7 +443,7 @@ func UseCoupon(db *sql.DB, useInfo *UseInfo) (interface{}, error) {
 	logger.Info(">>>\n%v\n%v, %v, %v, %v, %v", sql,
 		useInfo.Use_time, useInfo.Username, useInfo.Namespace, useInfo.Serial, useInfo.Code)
 
-	useResult := useResult{Amount: amount, Namespace: useInfo.Namespace}
+	useResult := &useResult{Amount: amount, Namespace: useInfo.Namespace}
 
 	logger.Info("End use a coupon model.")
 	return useResult, err
