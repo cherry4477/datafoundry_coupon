@@ -133,6 +133,7 @@ func getSingleCoupon(db *sql.DB, sqlWhere string) (*retrieveResult, error) {
 	}
 
 	if len(apps) == 0 {
+		logger.Error("No this coupon.")
 		return nil, nil
 	}
 

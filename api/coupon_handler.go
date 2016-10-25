@@ -164,7 +164,10 @@ func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 	coupon, err := models.RetrieveCouponByID(db, couponId)
 	if err != nil {
 		logger.Error("Get coupon err: %v", err)
-		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeGetCoupon, err.Error()), nil)
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeGetCouponById, err.Error()), nil)
+		return
+	} else if coupon == nil {
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeGetCouponById, "This coupon does not exist."), nil)
 		return
 	}
 

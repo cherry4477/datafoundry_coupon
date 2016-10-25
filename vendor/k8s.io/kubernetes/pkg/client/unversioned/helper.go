@@ -249,5 +249,3 @@ func HTTPWrappersForConfig(config *Config, rt http.RoundTripper) (http.RoundTrip
 	}
 	return rt, nil
 }
-
-

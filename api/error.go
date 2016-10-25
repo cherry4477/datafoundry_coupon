@@ -35,6 +35,7 @@ const (
 	ErrorCodeGetCoupon         = 1311
 	ErrorCodeQueryCoupons      = 1312
 	ErrorCodeCallRecharge      = 1313
+	ErrorCodeGetCouponById     = 1314
 
 	NumErrors = 1500 // about 12k memroy wasted
 )

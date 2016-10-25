@@ -92,6 +92,7 @@ func (intstr IntOrString) MarshalJSON() ([]byte, error) {
 		return []byte{}, fmt.Errorf("impossible IntOrString.Kind")
 	}
 }
+
 /*
 func (intstr *IntOrString) Fuzz(c fuzz.Continue) {
 	if intstr == nil {
@@ -122,4 +123,3 @@ func GetIntOrPercentValue(intStr *IntOrString) (int, bool, error) {
 	}
 	return 0, false, fmt.Errorf("invalid value: neither int nor percentage")
 }
-
