@@ -57,13 +57,28 @@
 			"revisionTime": "2016-08-05T00:47:13Z"
 		},
 		{
+			"checksumSHA1": "17vYJDDMJO63/G/tRFIUuSlMCbE=",
+			"path": "github.com/ghodss/yaml",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "5EDo3sfuw3z3z0kpnreuTfSxmfg=",
 			"path": "github.com/go-sql-driver/mysql",
 			"revision": ""
 		},
 		{
+			"checksumSHA1": "URsJa4y/sUUw/STmbeYx9EKqaYE=",
+			"path": "github.com/golang/glog",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "OzddgAh0uv3ukKhWW7QFUEFbxow=",
 			"path": "github.com/golang/snappy",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "MGFnNo7z324UK7kjSC5v+G+CsCI=",
+			"path": "github.com/google/gofuzz",
 			"revision": ""
 		},
 		{
@@ -89,6 +104,81 @@
 			"path": "github.com/rcrowley/go-metrics",
 			"revision": "bdb33529eca3e55eac7328e07c57012a797af602",
 			"revisionTime": "2016-07-18T16:53:37Z"
+		},
+		{
+			"checksumSHA1": "SYwpsitf6VYOlNpJf6M3w+9l1nM=",
+			"path": "gopkg.in/yaml.v2",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "/iQoarfH66qH/tuAhUYcAJWrYkU=",
+			"path": "k8s.io/kubernetes/pkg/api/errors",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "n2CkfIZOQv9BpHgJ9PoH68pB3l0=",
+			"path": "k8s.io/kubernetes/pkg/api/resource",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "ZVeBX9lJl5rxGkIMbz25YAPWO4Q=",
+			"path": "k8s.io/kubernetes/pkg/api/unversioned",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "UF/S7iuk8yg31YI+cD3YpR1iM28=",
+			"path": "k8s.io/kubernetes/pkg/api/v1",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "4OHgrRPebSihw/yBgjcDuZ3re1w=",
+			"path": "k8s.io/kubernetes/pkg/client/unversioned",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "woTxRW2aUOAPmT4z3oZJ524+cig=",
+			"path": "k8s.io/kubernetes/pkg/runtime",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "jJP6C9U1b8ciKOYDXnFA9rkpjfU=",
+			"path": "k8s.io/kubernetes/pkg/types",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "gemWjWl4ObqrPcuP4DffgQLSha4=",
+			"path": "k8s.io/kubernetes/pkg/util",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "/xlnpUX50FaF2J16OfRnN0sIZGY=",
+			"path": "k8s.io/kubernetes/pkg/util/errors",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "QcosEUd7l6L3QGg4TDFZmgF5Pu0=",
+			"path": "k8s.io/kubernetes/pkg/util/fielderrors",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "qYiNVMVZObw5gRL5OEAupF++KSc=",
+			"path": "k8s.io/kubernetes/pkg/util/intstr",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "zTe8wQGtUjzW4UN5qlI68xOmYtQ=",
+			"path": "k8s.io/kubernetes/pkg/util/sets",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "UK2slZMgBK+NYvZ35AMquSh7oR4=",
+			"path": "k8s.io/kubernetes/pkg/util/yaml",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "xuAq8CvoMWlyAz0mm5xfLQE9NVw=",
+			"path": "speter.net/go/exp/math/dec/inf",
+			"revision": ""
 		}
 	],
 	"rootPath": "github.com/asiainfoLDP/datafoundry_coupon"
