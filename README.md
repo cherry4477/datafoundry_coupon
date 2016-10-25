@@ -81,13 +81,13 @@ code: 返回码
 msg: 返回信息
 ```
 
-### GET /charge/v1/coupons/{serial}
+### GET /charge/v1/coupons/{code}
 
 查询一个优惠券
 
 Path Parameters:
 ```
-serial: 优惠券序列号
+serial: 优惠码
 ```
 eg:
 ```
