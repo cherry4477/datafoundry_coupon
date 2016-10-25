@@ -36,6 +36,9 @@ const (
 	ErrorCodeQueryCoupons      = 1312
 	ErrorCodeCallRecharge      = 1313
 	ErrorCodeGetCouponById     = 1314
+	ErrorCodeCouponHasUsed     = 1315
+	ErrorCodeCouponHasExpired  = 1316
+	ErrorCodeCouponUnavailable = 1317
 
 	NumErrors = 1500 // about 12k memroy wasted
 )
@@ -54,7 +57,7 @@ func init() {
 
 	initError(ErrorCodeCreateCoupon, "failed to create coupon")
 	initError(ErrorCodeUseCoupon, "failed to use a coupon")
-	//initError(ErrorCodeModifyPlan, "failed to modify plan")
+	//initError(ErrorCodeModifyCoupon, "failed to modify plan")
 	//initError(ErrorCodeGetPlan, "failed to retrieve plan")
 	//initError(ErrorCodeQueryPlans, "failed to query plans")
 

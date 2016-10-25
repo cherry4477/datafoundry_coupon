@@ -171,6 +171,17 @@ func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 		return
 	}
 
+	if coupon.Status == "used" {
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeCouponHasUsed, "This coupon does has used."), nil)
+		return
+	} else if coupon.Status == "expired" {
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeCouponHasExpired, "This coupon does has expired."), nil)
+		return
+	} else if coupon.Status == "unavailable" {
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeCouponUnavailable, "This coupon is not available."), nil)
+		return
+	}
+
 	logger.Info("End retrieve coupon handler.")
 	JsonResult(w, http.StatusOK, nil, coupon)
 }
