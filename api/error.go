@@ -39,6 +39,7 @@ const (
 	ErrorCodeCouponHasUsed     = 1315
 	ErrorCodeCouponHasExpired  = 1316
 	ErrorCodeCouponUnavailable = 1317
+	ErrorCodeGetCouponNotExsit = 1318
 
 	NumErrors = 1500 // about 12k memroy wasted
 )

@@ -167,7 +167,7 @@ func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeGetCouponById, err.Error()), nil)
 		return
 	} else if coupon == nil {
-		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeGetCouponById, "This coupon does not exist."), nil)
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeGetCouponNotExsit, "This coupon does not exist."), nil)
 		return
 	}
 
