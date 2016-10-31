@@ -104,44 +104,6 @@ func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	JsonResult(w, http.StatusOK, nil, nil)
 }
 
-//func ModifyPlan(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-//	logger.Info("Request url: PUT %v.", r.URL)
-//
-//	logger.Info("Begin modify plan handler.")
-//
-//	db := models.GetDB()
-//	if db == nil {
-//		logger.Warn("Get db is nil.")
-//		JsonResult(w, http.StatusInternalServerError, GetError(ErrorCodeDbNotInitlized), nil)
-//		return
-//	}
-//
-//	plan := &models.Plan{}
-//	err := commom.ParseRequestJsonInto(r, plan)
-//	if err != nil {
-//		logger.Error("Parse body err: %v", err)
-//		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeParseJsonFailed, err.Error()), nil)
-//		return
-//	}
-//	logger.Debug("Plan: %v", plan)
-//
-//	planId := params.ByName("id")
-//	logger.Debug("Plan id: %s.", planId)
-//
-//	plan.Plan_id = planId
-//
-//	//update in database
-//	err = models.ModifyPlan(db, plan)
-//	if err != nil {
-//		logger.Error("Modify plan err: %v", err)
-//		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeModifyPlan, err.Error()), nil)
-//		return
-//	}
-//
-//	logger.Info("End modify plan handler.")
-//	JsonResult(w, http.StatusOK, nil, nil)
-//}
-//
 func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	logger.Info("Request url: GET %v.", r.URL)
 	logger.Info("Begin retrieve coupon handler.")
@@ -217,14 +179,14 @@ func QueryCouponList(w http.ResponseWriter, r *http.Request, params httprouter.P
 	orderBy := models.ValidateOrderBy(r.Form.Get("orderby"))
 	sortOrder := models.ValidateSortOrder(r.Form.Get("sortorder"), false)
 
-	count, apps, err := models.QueryCoupons(db, kind, orderBy, sortOrder, offset, size)
+	count, coupons, err := models.QueryCoupons(db, kind, orderBy, sortOrder, offset, size)
 	if err != nil {
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeQueryCoupons, err.Error()), nil)
 		return
 	}
 
 	logger.Info("End retrieve coupon list handler.")
-	JsonResult(w, http.StatusOK, nil, NewQueryListResult(count, apps))
+	JsonResult(w, http.StatusOK, nil, NewQueryListResult(count, coupons))
 }
 
 func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -280,6 +242,43 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 
 	logger.Info("End use a coupon handler.")
 	JsonResult(w, http.StatusOK, nil, result)
+}
+
+func ProvideCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	logger.Info("Request url: PUT %v.", r.URL)
+	logger.Info("Begin provide coupons handler.")
+
+	db := models.GetDB()
+	if db == nil {
+		logger.Warn("Get db is nil.")
+		JsonResult(w, http.StatusInternalServerError, GetError(ErrorCodeDbNotInitlized), nil)
+		return
+	}
+
+	username, e := validateAuth(r.Header.Get("Authorization"))
+	if e != nil {
+		JsonResult(w, http.StatusUnauthorized, e, nil)
+		return
+	}
+	logger.Debug("username:%v", username)
+
+	if !canEditSaasApps(username) {
+		JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
+		return
+	}
+
+	r.ParseForm()
+
+	number := r.Form.Get("number")
+	amount := r.Form.Get("amount")
+	count, coupons, err := models.ProvideCoupon(db, number, amount)
+	if err != nil {
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeProvideCoupons, err.Error()), nil)
+		return
+	}
+
+	logger.Info("End provide coupons handler.")
+	JsonResult(w, http.StatusOK, nil, NewQueryListResult(count, coupons))
 }
 
 func genSerial() string {

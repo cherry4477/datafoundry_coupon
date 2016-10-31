@@ -68,4 +68,5 @@ func NewRouter(router *httprouter.Router) {
 	router.PUT("/charge/v1/coupons/use/:serial", api.TimeoutHandle(5500*time.Millisecond, api.UseCoupon))
 	router.GET("/charge/v1/coupons/:code", api.TimeoutHandle(5500*time.Millisecond, api.RetrieveCoupon))
 	router.GET("/charge/v1/coupons", api.TimeoutHandle(5500*time.Millisecond, api.QueryCouponList))
+	router.GET("/charge/v1/provide/coupons", api.TimeoutHandle(5500*time.Millisecond, api.ProvideCoupons))
 }

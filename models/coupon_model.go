@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -81,31 +82,6 @@ func DeleteCoupon(db *sql.DB, couponId string) error {
 	return err
 }
 
-//func ModifyPlan(db *sql.DB, planInfo *Coupon) error {
-//	logger.Info("Model begin modify a plan.")
-//	defer logger.Info("Model begin modify a plan.")
-//
-//	plan, err := RetrievePlanByID(db, planInfo.Plan_id)
-//	if err != nil {
-//		return err
-//	} else if plan == nil {
-//		return errors.New("Without this plan.")
-//	}
-//	logger.Debug("Retrieve plan: %v", plan)
-//
-//	err = modifyPlanStatusToN(db, plan.Plan_id)
-//	if err != nil {
-//		return err
-//	}
-//
-//	_, err = CreatePlan(db, planInfo)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return err
-//}
-
 type retrieveResult struct {
 	Serial   string    `json:"serial"`
 	ExpireOn time.Time `json:"expire_on"`
@@ -123,7 +99,7 @@ func RetrieveCouponByID(db *sql.DB, couponId string) (*retrieveResult, error) {
 }
 
 func getSingleCoupon(db *sql.DB, sqlWhere string) (*retrieveResult, error) {
-	apps, err := queryCoupons(db, sqlWhere, "", 1, 0)
+	coupons, err := queryCoupons(db, sqlWhere, "", 1, 0)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -132,12 +108,117 @@ func getSingleCoupon(db *sql.DB, sqlWhere string) (*retrieveResult, error) {
 		}
 	}
 
-	if len(apps) == 0 {
+	if len(coupons) == 0 {
 		logger.Error("No this coupon.")
 		return nil, nil
 	}
 
-	return apps[0], nil
+	err = updateCouponStatusToQ(db, coupons[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return coupons[0], nil
+}
+
+func updateCouponStatusToQ(db *sql.DB, result *retrieveResult) error {
+	sqlstr := fmt.Sprintf(`update DF_COUPON set status = "queried" where SERIAL = '%s' and STATUS = 'available'`, result.Serial)
+
+	_, err := db.Exec(sqlstr)
+	if err != nil {
+		logger.Error("Exec err : %v", err)
+		return err
+	}
+
+	return err
+}
+
+func ProvideCoupon(db *sql.DB, numberStr, amountStr string) (int64, []*retrieveResult, error) {
+	number, err := ValidateNumber(numberStr, 10)
+	if err != nil {
+		logger.Error("Catch err: %v.", err)
+		return 0, nil, err
+	}
+
+	var sqlWhere string
+
+	if amountStr == "" {
+		sqlWhere = "STATUS='available'"
+	} else {
+		amount, err := ValidateAmount(amountStr)
+		if err != nil {
+			logger.Error("Catch err: %v.", err)
+			return 0, nil, err
+		}
+		sqlWhere = fmt.Sprintf("STATUS='available' AND AMOUNT=%d", amount)
+	}
+
+	coupons, err := queryCoupons(db, sqlWhere, "", number, 0)
+	if err != nil {
+		logger.Error("Catch err: %v.", err)
+		return 0, nil, err
+	}
+
+	err = updateCouponsStatusToP(db, coupons)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return int64(len(coupons)), coupons, nil
+}
+
+func ValidateNumber(numberStr string, defaultNumber int) (int, error) {
+	switch numberStr {
+	case "":
+		return defaultNumber, nil
+	}
+
+	number, err := strconv.Atoi(numberStr)
+	if err != nil {
+		logger.Error("strconv.Atoi err: %v.", err)
+		return defaultNumber, err
+	}
+
+	return number, nil
+}
+
+func updateCouponsStatusToP(db *sql.DB, results []*retrieveResult) error {
+	var sql string
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	for _, result := range results {
+		sql = fmt.Sprintf(`update DF_COUPON set status = "provided" where SERIAL = '%s' and STATUS = 'available'`, result.Serial)
+
+		_, err = tx.Exec(sql)
+		if err != nil {
+			logger.Error("Exec err: %v", err)
+			err = tx.Rollback()
+			if err != nil {
+				logger.Error("db rollback err: %v", err)
+				return err
+			}
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		logger.Error("db commit err: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func ValidateAmount(amountStr string) (int, error) {
+	amount, err := strconv.Atoi(amountStr)
+	if err != nil {
+		logger.Error("strconv.Atoi err: %v.", err)
+		return 0, err
+	}
+
+	return amount, err
 }
 
 func queryCoupons(db *sql.DB, sqlWhere, orderBy string, limit int, offset int64, sqlParams ...interface{}) ([]*retrieveResult, error) {
@@ -231,12 +312,10 @@ func QueryCoupons(db *sql.DB, kind, orderBy string, sortOrder bool, offset int64
 
 	switch strings.ToLower(orderBy) {
 	default:
-		orderBy = "CREATE_AT"
+		orderBy = "EXPIRE_ON"
 		sortOrder = false
 	case "createtime":
 		orderBy = "CREATE_TIME"
-	case "hotness":
-		orderBy = "HOTNESS"
 	}
 
 	sqlSort := fmt.Sprintf("%s %s", orderBy, sortOrderText[sortOrder])
@@ -246,20 +325,6 @@ func QueryCoupons(db *sql.DB, kind, orderBy string, sortOrder bool, offset int64
 	logger.Debug("sqlWhere=%v", sqlWhere)
 	return getCouponList(db, offset, limit, sqlWhere, sqlSort, sqlParams...)
 }
-
-//func getRegionId(db *sql.DB, region string) (int, error) {
-//	sql := `SELECT ID FROM DF_PLAN_REGION WHERE REGION=?`
-//
-//	row := db.QueryRow(sql, region)
-//
-//	var regionId int
-//	err := row.Scan(&regionId)
-//	if err != nil {
-//		return 0, err
-//	}
-//
-//	return regionId, err
-//}
 
 const (
 	SortOrder_Asc  = "asc"
@@ -285,8 +350,6 @@ func ValidateOrderBy(orderBy string) string {
 	switch orderBy {
 	case "createtime":
 		return "CREATE_TIME"
-	case "hotness":
-		return "HOTNESS"
 	}
 
 	return ""
@@ -350,32 +413,6 @@ func validateOffsetAndLimit(count int64, offset *int64, limit *int) {
 		*limit = int(count - *offset)
 	}
 }
-
-//func RetrievePlanRegion(db *sql.DB) ([]PlanRegion, error) {
-//	logger.Info("Model begin get plans region.")
-//
-//	sql := "SELECT REGION, REGION_DESCRIBE, IDENTIFICATION FROM DF_PLAN_REGION"
-//
-//	rows, err := db.Query(sql)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	regions := make([]PlanRegion, 0)
-//	var region PlanRegion
-//	for rows.Next() {
-//		err = rows.Scan(&region.Region, &region.Region_describe, &region.Identification)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		regions = append(regions, region)
-//	}
-//
-//	logger.Info("Model end get plan region.")
-//
-//	return regions, err
-//}
 
 type UseInfo struct {
 	Serial    string    `json:"serial"`
