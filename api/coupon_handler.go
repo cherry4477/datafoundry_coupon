@@ -311,5 +311,5 @@ func validateAuth(token string) (string, *Error) {
 }
 
 func canEditSaasApps(username string) bool {
-	return username == "datafoundry"
+	return username == "wangmeng5"
 }
