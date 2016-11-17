@@ -62,11 +62,11 @@ func InitRouter() *httprouter.Router {
 
 func NewRouter(router *httprouter.Router) {
 	logger.Info("new router.")
-	router.POST("/charge/v1/coupons", api.TimeoutHandle(5500*time.Millisecond, api.CreateCoupon))
-	router.DELETE("/charge/v1/coupons/:serial", api.TimeoutHandle(5500*time.Millisecond, api.DeleteCoupon))
-	//router.PUT("/charge/v1/coupons/:serial", api.TimeoutHandle(5500*time.Millisecond, handler.ModifyCoupon))
-	router.PUT("/charge/v1/coupons/use/:serial", api.TimeoutHandle(5500*time.Millisecond, api.UseCoupon))
-	router.GET("/charge/v1/coupons/:code", api.TimeoutHandle(5500*time.Millisecond, api.RetrieveCoupon))
-	router.GET("/charge/v1/coupons", api.TimeoutHandle(5500*time.Millisecond, api.QueryCouponList))
-	router.GET("/charge/v1/provide/coupons", api.TimeoutHandle(5500*time.Millisecond, api.ProvideCoupons))
+	router.POST("/charge/v1/coupons", api.TimeoutHandle(10000*time.Millisecond, api.CreateCoupon))
+	router.DELETE("/charge/v1/coupons/:serial", api.TimeoutHandle(10000*time.Millisecond, api.DeleteCoupon))
+	//router.PUT("/charge/v1/coupons/:serial", api.TimeoutHandle(10000*time.Millisecond, handler.ModifyCoupon))
+	router.PUT("/charge/v1/coupons/use/:serial", api.TimeoutHandle(10000*time.Millisecond, api.UseCoupon))
+	router.GET("/charge/v1/coupons/:code", api.TimeoutHandle(10000*time.Millisecond, api.RetrieveCoupon))
+	router.GET("/charge/v1/coupons", api.TimeoutHandle(10000*time.Millisecond, api.QueryCouponList))
+	router.GET("/charge/v1/provide/coupons", api.TimeoutHandle(10000*time.Millisecond, api.ProvideCoupons))
 }

@@ -8,7 +8,6 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/asiainfoLDP/datahub_commons/log"
 )
 
 func TimeoutHandle(dt time.Duration, h httprouter.Handle) httprouter.Handle {
@@ -42,7 +41,7 @@ func TimeoutHandleWithMessage(h httprouter.Handle, dt time.Duration, msg string)
 				tw.w.Write(body)
 			}
 			tw.timedOut = true
-			log.DefaultlLogger().Warningf("timeout: %s", r.URL.String())
+			logger.Warn("timeout: %s", r.URL.String())
 		}
 	}
 }
