@@ -124,7 +124,7 @@ func connectDB() {
 }
 
 func upgradeDB() {
-	err := TryToUpgradeDatabase(DB(), "datafoundry:plan", os.Getenv("MYSQL_CONFIG_DONT_UPGRADE_TABLES") != "yes") // don't change the name
+	err := TryToUpgradeDatabase(DB(), "datafoundry:coupon", os.Getenv("MYSQL_CONFIG_DONT_UPGRADE_TABLES") != "yes") // don't change the name
 	if err != nil {
 		logger.Error("TryToUpgradeDatabase error: %v.", err)
 	}
