@@ -277,7 +277,11 @@ func ProvideCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeProvideCoupons, err.Error()), nil)
 		return
 	} else if err == nil && isProvide == false {
-		JsonResult(w, http.StatusBadRequest, GetError(ErrorCouponHasProvided), nil)
+		var card = struct {
+			IsProvide bool   `json:"isProvide"`
+			Code      string `json:"code"`
+		}{true, ""}
+		JsonResult(w, http.StatusOK, nil, card)
 		return
 	}
 
@@ -285,14 +289,19 @@ func ProvideCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 
 	number := r.Form.Get("number")
 	amount := r.Form.Get("amount")
-	count, coupons, err := models.ProvideCoupon(db, number, amount)
+	_, coupons, err := models.ProvideCoupon(db, number, amount)
 	if err != nil {
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeProvideCoupons, err.Error()), nil)
 		return
 	}
 
+	var card = struct {
+		IsProvide bool   `json:"isProvide"`
+		Code      string `json:"code"`
+	}{false, coupons[0].Serial}
+
 	logger.Info("End provide coupons handler.")
-	JsonResult(w, http.StatusOK, nil, NewQueryListResult(count, coupons))
+	JsonResult(w, http.StatusOK, nil, card)
 }
 
 func validateReceive(info *models.FromUser) {
