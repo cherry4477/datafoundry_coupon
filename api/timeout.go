@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
-
 )
 
 func TimeoutHandle(dt time.Duration, h httprouter.Handle) httprouter.Handle {

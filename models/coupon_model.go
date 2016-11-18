@@ -182,6 +182,16 @@ func ValidateNumber(numberStr string, defaultNumber int) (int, error) {
 	return number, nil
 }
 
+func ValidateAmount(amountStr string) (int, error) {
+	amount, err := strconv.Atoi(amountStr)
+	if err != nil {
+		logger.Error("strconv.Atoi err: %v.", err)
+		return 0, err
+	}
+
+	return amount, err
+}
+
 func updateCouponsStatusToP(db *sql.DB, results []*retrieveResult) error {
 	var sql string
 	tx, err := db.Begin()
@@ -209,16 +219,6 @@ func updateCouponsStatusToP(db *sql.DB, results []*retrieveResult) error {
 	}
 
 	return nil
-}
-
-func ValidateAmount(amountStr string) (int, error) {
-	amount, err := strconv.Atoi(amountStr)
-	if err != nil {
-		logger.Error("strconv.Atoi err: %v.", err)
-		return 0, err
-	}
-
-	return amount, err
 }
 
 func queryCoupons(db *sql.DB, sqlWhere, orderBy string, limit int, offset int64, sqlParams ...interface{}) ([]*retrieveResult, error) {
@@ -485,4 +485,33 @@ func UseCoupon(db *sql.DB, useInfo *UseInfo) (*useResult, error) {
 
 	logger.Info("End use a coupon model.")
 	return useResult, err
+}
+
+type FromUser struct {
+	OpenId       string `json:"openId"`
+	Provide_time int64  `json:"provideTime"`
+}
+
+func JudgeIsProvide(db *sql.DB, info *FromUser) (error, bool) {
+	sql := "select count(*) from DF_COUPON_PROVIDE where TO_USER = ?"
+
+	var count int
+	err := db.QueryRow(sql, info.OpenId).Scan(&count)
+	if err != nil {
+		logger.Error("QueryRow err: %v.", err)
+		return err, false
+	}
+	logger.Debug("count: %v.", count)
+
+	if count == 0 {
+		sql := "insert into DF_COUPON_PROVIDE (TO_USER, PROVIDE_TIME) values (?, ?)"
+		_, err := db.Exec(sql, info.OpenId, info.Provide_time)
+		if err != nil {
+			logger.Error("Exec err: %v.", err)
+			return err, false
+		}
+		return nil, true
+	} else {
+		return nil, false
+	}
 }

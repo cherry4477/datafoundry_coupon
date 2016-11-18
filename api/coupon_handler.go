@@ -255,15 +255,29 @@ func ProvideCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 		return
 	}
 
-	username, e := validateAuth(r.Header.Get("Authorization"))
-	if e != nil {
-		JsonResult(w, http.StatusUnauthorized, e, nil)
-		return
-	}
-	logger.Debug("username:%v", username)
+	//username, e := validateAuth(r.Header.Get("Authorization"))
+	//if e != nil {
+	//	JsonResult(w, http.StatusUnauthorized, e, nil)
+	//	return
+	//}
+	//logger.Debug("username:%v", username)
+	//
+	//if !canEditSaasApps(username) {
+	//	JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
+	//	return
+	//}
 
-	if !canEditSaasApps(username) {
-		JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
+	fromUserInfo := &models.FromUser{}
+	err := common.ParseRequestJsonInto(r, fromUserInfo)
+	logger.Debug("fromUserInfo: %v.", fromUserInfo)
+	err, isProvide := models.JudgeIsProvide(db, fromUserInfo)
+	logger.Info("isProvide: %v.", isProvide)
+
+	if err != nil {
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeProvideCoupons, err.Error()), nil)
+		return
+	} else if err == nil && isProvide == false {
+		JsonResult(w, http.StatusBadRequest, GetError(ErrorCouponHasProvided), nil)
 		return
 	}
 
@@ -279,6 +293,10 @@ func ProvideCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 
 	logger.Info("End provide coupons handler.")
 	JsonResult(w, http.StatusOK, nil, NewQueryListResult(count, coupons))
+}
+
+func validateReceive(info *models.FromUser) {
+
 }
 
 func genSerial() string {

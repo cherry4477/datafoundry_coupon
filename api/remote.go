@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"github.com/asiainfoLDP/datafoundry_coupon/common"
+	"github.com/asiainfoLDP/datafoundry_coupon/models"
 	"github.com/asiainfoLDP/datafoundry_coupon/openshift"
 	userapi "github.com/openshift/origin/pkg/user/api/v1"
 	kapi "k8s.io/kubernetes/pkg/api/v1"
@@ -11,7 +12,7 @@ import (
 )
 
 const (
-	GeneralRemoteCallTimeout = 10 // seconds
+	RemoteAddr = "dev.dataos.io:8443"
 )
 
 //=================================================
@@ -24,10 +25,14 @@ var (
 )
 
 func BuildServiceUrlPrefixFromEnv(name string, isHttps bool, addrEnv string, portEnv string) string {
-	addr := os.Getenv(addrEnv)
+	var addr string
+	if models.SetPlatform {
+		addr = RemoteAddr
+	} else {
+		addr = os.Getenv(addrEnv)
+	}
 	if addr == "" {
 		logger.Emergency("%s env should not be null", addrEnv)
-
 	}
 	if portEnv != "" {
 		port := os.Getenv(portEnv)
