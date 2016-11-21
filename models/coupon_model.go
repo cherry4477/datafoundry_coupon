@@ -133,7 +133,7 @@ func updateCouponStatusToQ(db *sql.DB, result *retrieveResult) error {
 	return err
 }
 
-func ProvideCoupon(db *sql.DB, numberStr, amountStr string) (int64, []*retrieveResult, error) {
+func ProvideCoupon(db *sql.DB, numberStr, amountStr string) (int64, []string, error) {
 	number, err := ValidateNumber(numberStr, 10)
 	if err != nil {
 		logger.Error("Catch err: %v.", err)
@@ -153,18 +153,42 @@ func ProvideCoupon(db *sql.DB, numberStr, amountStr string) (int64, []*retrieveR
 		sqlWhere = fmt.Sprintf("STATUS='available' AND AMOUNT=%d", amount)
 	}
 
-	coupons, err := queryCoupons(db, sqlWhere, "", number, 0)
+	codes, err := provideCodes(db, sqlWhere, number)
+	//coupons, err := queryCoupons(db, sqlWhere, "", number, 0)
 	if err != nil {
 		logger.Error("Catch err: %v.", err)
 		return 0, nil, err
 	}
 
-	err = updateCouponsStatusToP(db, coupons)
+	err = updateCouponsStatusToP(db, codes)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	return int64(len(coupons)), coupons, nil
+	return int64(len(codes)), codes, nil
+}
+
+func provideCodes(db *sql.DB, sqlWhere string, number int) ([]string, error) {
+	sql := fmt.Sprintf("select CODE from DF_COUPON "+
+		"WHERE %s limit %d offset %d",
+		sqlWhere, number, 0)
+	rows, err := db.Query(sql)
+	if err != nil {
+		logger.Error("Query err:", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	logger.Info(">>>>>>>%s", sql)
+
+	var codes []string
+	for rows.Next() {
+		var code string
+		rows.Scan(&code)
+		codes = append(codes, code)
+	}
+
+	return codes, nil
 }
 
 func ValidateNumber(numberStr string, defaultNumber int) (int, error) {
@@ -192,14 +216,14 @@ func ValidateAmount(amountStr string) (int, error) {
 	return amount, err
 }
 
-func updateCouponsStatusToP(db *sql.DB, results []*retrieveResult) error {
+func updateCouponsStatusToP(db *sql.DB, codes []string) error {
 	var sql string
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
-	for _, result := range results {
-		sql = fmt.Sprintf(`update DF_COUPON set status = "provided" where SERIAL = '%s' and STATUS = 'available'`, result.Serial)
+	for _, code := range codes {
+		sql = fmt.Sprintf(`update DF_COUPON set status = "provided" where CODE = '%s' and STATUS = 'available'`, code)
 
 		_, err = tx.Exec(sql)
 		if err != nil {
@@ -492,7 +516,7 @@ type FromUser struct {
 	Provide_time int64  `json:"provideTime"`
 }
 
-func JudgeIsProvide(db *sql.DB, info *FromUser) (error, bool) {
+func JudgeIsProvide(db *sql.DB, info *FromUser, timeStr string) (error, bool) {
 	sql := "select count(*) from DF_COUPON_PROVIDE where TO_USER = ?"
 
 	var count int
@@ -505,7 +529,7 @@ func JudgeIsProvide(db *sql.DB, info *FromUser) (error, bool) {
 
 	if count == 0 {
 		sql := "insert into DF_COUPON_PROVIDE (TO_USER, PROVIDE_TIME) values (?, ?)"
-		_, err := db.Exec(sql, info.OpenId, info.Provide_time)
+		_, err := db.Exec(sql, info.OpenId, timeStr)
 		if err != nil {
 			logger.Error("Exec err: %v.", err)
 			return err, false

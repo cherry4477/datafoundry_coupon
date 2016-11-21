@@ -42,6 +42,7 @@ const (
 	ErrorCodeGetCouponNotExsit = 1318
 	ErrorCodeProvideCoupons    = 1319
 	ErrorCouponHasProvided     = 1320
+	ErrorNoMoreCoupon          = 1321
 
 	NumErrors = 1500 // about 12k memroy wasted
 )
@@ -64,6 +65,7 @@ func init() {
 	initError(ErrorCodeGetCoupon, "failed to retrieve coupon")
 	initError(ErrorCodeQueryCoupons, "failed to query coupons")
 	initError(ErrorCouponHasProvided, "the user has provided")
+	initError(ErrorNoMoreCoupon, "no more coupon can provide")
 
 	ErrorNone = GetError(ErrorCodeNone)
 	ErrorUnkown = GetError(ErrorCodeUnkown)

@@ -62,7 +62,7 @@ func InitRouter() *httprouter.Router {
 
 func NewRouter(router *httprouter.Router) {
 	logger.Info("new router.")
-	router.POST("/charge/v1/coupons", api.TimeoutHandle(10000*time.Millisecond, api.CreateCoupon))
+	router.POST("/charge/v1/coupons", api.TimeoutHandle(30000*time.Millisecond, api.CreateCoupon))
 	router.DELETE("/charge/v1/coupons/:serial", api.TimeoutHandle(10000*time.Millisecond, api.DeleteCoupon))
 	//router.PUT("/charge/v1/coupons/:serial", api.TimeoutHandle(10000*time.Millisecond, handler.ModifyCoupon))
 	router.PUT("/charge/v1/coupons/use/:serial", api.TimeoutHandle(10000*time.Millisecond, api.UseCoupon))

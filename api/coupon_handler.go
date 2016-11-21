@@ -29,17 +29,17 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 		return
 	}
 
-	username, e := validateAuth(r.Header.Get("Authorization"))
-	if e != nil {
-		JsonResult(w, http.StatusUnauthorized, e, nil)
-		return
-	}
-	logger.Debug("username:%v", username)
-
-	if !canEditSaasApps(username) {
-		JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
-		return
-	}
+	//username, e := validateAuth(r.Header.Get("Authorization"))
+	//if e != nil {
+	//	JsonResult(w, http.StatusUnauthorized, e, nil)
+	//	return
+	//}
+	//logger.Debug("username:%v", username)
+	//
+	//if !canEditSaasApps(username) {
+	//	JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
+	//	return
+	//}
 
 	coupon := &models.Coupon{}
 	err := common.ParseRequestJsonInto(r, coupon)
@@ -270,9 +270,12 @@ func ProvideCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 	fromUserInfo := &models.FromUser{}
 	err := common.ParseRequestJsonInto(r, fromUserInfo)
 	logger.Debug("fromUserInfo: %v.", fromUserInfo)
-	err, isProvide := models.JudgeIsProvide(db, fromUserInfo)
-	logger.Info("isProvide: %v.", isProvide)
 
+	tm := time.Unix(fromUserInfo.Provide_time, 0)
+	timeStr := tm.Format("2006-01-02 15:04:05.999999")
+
+	err, isProvide := models.JudgeIsProvide(db, fromUserInfo, timeStr)
+	logger.Info("isProvide: %v.", isProvide)
 	if err != nil {
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeProvideCoupons, err.Error()), nil)
 		return
@@ -289,23 +292,23 @@ func ProvideCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 
 	number := r.Form.Get("number")
 	amount := r.Form.Get("amount")
-	_, coupons, err := models.ProvideCoupon(db, number, amount)
+	count, codes, err := models.ProvideCoupon(db, number, amount)
 	if err != nil {
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeProvideCoupons, err.Error()), nil)
 		return
 	}
 
+	if count == 0 {
+		JsonResult(w, http.StatusBadRequest, GetError(ErrorNoMoreCoupon), nil)
+		return
+	}
 	var card = struct {
 		IsProvide bool   `json:"isProvide"`
 		Code      string `json:"code"`
-	}{false, coupons[0].Serial}
+	}{false, codes[0]}
 
 	logger.Info("End provide coupons handler.")
 	JsonResult(w, http.StatusOK, nil, card)
-}
-
-func validateReceive(info *models.FromUser) {
-
 }
 
 func genSerial() string {
