@@ -29,17 +29,17 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 		return
 	}
 
-	//username, e := validateAuth(r.Header.Get("Authorization"))
-	//if e != nil {
-	//	JsonResult(w, http.StatusUnauthorized, e, nil)
-	//	return
-	//}
-	//logger.Debug("username:%v", username)
-	//
-	//if !canEditSaasApps(username) {
-	//	JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
-	//	return
-	//}
+	username, e := validateAuth(r.Header.Get("Authorization"))
+	if e != nil {
+		JsonResult(w, http.StatusUnauthorized, e, nil)
+		return
+	}
+	logger.Debug("username:%v", username)
+
+	if !canEditSaasApps(username) {
+		JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
+		return
+	}
 
 	coupon := &models.Coupon{}
 	err := common.ParseRequestJsonInto(r, coupon)
