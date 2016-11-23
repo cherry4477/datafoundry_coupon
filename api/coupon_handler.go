@@ -227,16 +227,16 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 		return
 	}
 
+	result, err := models.UseCoupon(db, useInfo)
+	if err != nil {
+		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeUseCoupon, err.Error()), nil)
+		return
+	}
+
 	err = couponRecharge(openshift.AdminToken(), serial, username, useInfo.Namespace, getResult.Amount)
 	if err != nil {
 		logger.Error("call recharge api err: %v", err)
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeCallRecharge, err.Error()), nil)
-		return
-	}
-
-	result, err := models.UseCoupon(db, useInfo)
-	if err != nil {
-		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeUseCoupon, err.Error()), nil)
 		return
 	}
 
