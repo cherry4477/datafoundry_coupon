@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
+	"strings"
 )
 
 const (
@@ -302,10 +303,14 @@ func ProvideCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 		JsonResult(w, http.StatusBadRequest, GetError(ErrorNoMoreCoupon), nil)
 		return
 	}
+
+	resultCode := codes[0]
+	resultCode = resultCode[0:4]+"-"+resultCode[4:8]+"-"+resultCode[8:12]+"-"+resultCode[12:16]
+
 	var card = struct {
 		IsProvide bool   `json:"isProvide"`
 		Code      string `json:"code"`
-	}{false, codes[0]}
+	}{false, strings.ToUpper(resultCode)}
 
 	logger.Info("End provide coupons handler.")
 	JsonResult(w, http.StatusOK, nil, card)
