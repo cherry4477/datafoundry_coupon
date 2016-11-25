@@ -31,9 +31,9 @@ import (
 	//"github.com/ghodss/yaml"
 )
 
-func Init(dfHost, adminUser, adminPass string) {
-	theOC = createOpenshiftClient(dfHost, adminUser, adminPass)
-}
+//func Init(dfHost, adminUser, adminPass string) {
+//	theOC = createOpenshiftClient(dfHost, adminUser, adminPass)
+//}
 
 //==============================================================
 //
@@ -68,6 +68,8 @@ func NewOpenshiftClient(token string) *OpenshiftClient {
 }
 
 type OpenshiftClient struct {
+	name string
+
 	host string
 	//authUrl string
 	oapiUrl string
@@ -93,7 +95,7 @@ func httpsAddrMaker(addr string) string {
 }
 
 // for admin
-func createOpenshiftClient(host, username, password string) *OpenshiftClient {
+func CreateOpenshiftClient(name, host, username, password string, durPhase time.Duration) *OpenshiftClient {
 	host = httpsAddrMaker(host)
 	oc := &OpenshiftClient{
 		host: host,
@@ -106,7 +108,7 @@ func createOpenshiftClient(host, username, password string) *OpenshiftClient {
 	}
 	oc.bearerToken.Store("")
 
-	go oc.updateBearerToken()
+	go oc.updateBearerToken(durPhase)
 
 	return oc
 }
@@ -120,7 +122,7 @@ func (oc *OpenshiftClient) setBearerToken(token string) {
 	oc.bearerToken.Store(token)
 }
 
-func (oc *OpenshiftClient) updateBearerToken() {
+func (oc *OpenshiftClient) updateBearerToken(durPhase time.Duration) {
 	for {
 		clientConfig := &kclient.Config{}
 		clientConfig.Host = oc.host
@@ -139,9 +141,11 @@ func (oc *OpenshiftClient) updateBearerToken() {
 			//oc.bearerToken = "Bearer " + token
 			oc.setBearerToken("Bearer " + token)
 
-			println("RequestToken token: ", token)
+			println(oc.name, ", RequestToken token: ", token)
 
-			time.Sleep(3 * time.Hour)
+			// durPhase is to avoid mulitple OCs updating tokens at the same time
+			time.Sleep(3*time.Hour + durPhase)
+			durPhase = 0
 		}
 	}
 }

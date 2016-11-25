@@ -8,8 +8,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"math/rand"
 	"net/http"
-	"time"
 	"strings"
+	"time"
 )
 
 const (
@@ -30,7 +30,8 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 		return
 	}
 
-	username, e := validateAuth(r.Header.Get("Authorization"))
+	region := r.Form.Get("region")
+	username, e := validateAuth(r.Header.Get("Authorization"), region)
 	if e != nil {
 		JsonResult(w, http.StatusUnauthorized, e, nil)
 		return
@@ -71,7 +72,9 @@ func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	logger.Info("Request url: DELETE %v.", r.URL)
 	logger.Info("Begin delete coupon handler.")
 
-	username, e := validateAuth(r.Header.Get("Authorization"))
+	region := r.Form.Get("region")
+
+	username, e := validateAuth(r.Header.Get("Authorization"), region)
 	if e != nil {
 		JsonResult(w, http.StatusUnauthorized, e, nil)
 		return
@@ -109,7 +112,8 @@ func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 	logger.Info("Request url: GET %v.", r.URL)
 	logger.Info("Begin retrieve coupon handler.")
 
-	username, e := validateAuth(r.Header.Get("Authorization"))
+	region := r.Form.Get("region")
+	username, e := validateAuth(r.Header.Get("Authorization"), region)
 	if e != nil {
 		JsonResult(w, http.StatusUnauthorized, e, nil)
 		return
@@ -153,7 +157,8 @@ func QueryCouponList(w http.ResponseWriter, r *http.Request, params httprouter.P
 	logger.Info("Request url: GET %v.", r.URL)
 	logger.Info("Begin retrieve coupon list handler.")
 
-	username, e := validateAuth(r.Header.Get("Authorization"))
+	region := r.Form.Get("region")
+	username, e := validateAuth(r.Header.Get("Authorization"), region)
 	if e != nil {
 		JsonResult(w, http.StatusUnauthorized, e, nil)
 		return
@@ -201,7 +206,8 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 		return
 	}
 
-	username, e := validateAuth(r.Header.Get("Authorization"))
+	region := r.Form.Get("region")
+	username, e := validateAuth(r.Header.Get("Authorization"), region)
 	if e != nil {
 		JsonResult(w, http.StatusUnauthorized, e, nil)
 		return
@@ -305,7 +311,7 @@ func ProvideCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 	}
 
 	resultCode := codes[0]
-	resultCode = resultCode[0:4]+"-"+resultCode[4:8]+"-"+resultCode[8:12]+"-"+resultCode[12:16]
+	resultCode = resultCode[0:4] + "-" + resultCode[4:8] + "-" + resultCode[8:12] + "-" + resultCode[12:16]
 
 	var card = struct {
 		IsProvide bool   `json:"isProvide"`
@@ -332,12 +338,12 @@ func genCode() string {
 	return string(b)
 }
 
-func validateAuth(token string) (string, *Error) {
+func validateAuth(token, region string) (string, *Error) {
 	if token == "" {
 		return "", GetError(ErrorCodeAuthFailed)
 	}
 
-	username, err := getDFUserame(token)
+	username, err := getDFUserame(token, region)
 	if err != nil {
 		return "", GetError2(ErrorCodeAuthFailed, err.Error())
 	}

@@ -9,10 +9,17 @@ import (
 	kapi "k8s.io/kubernetes/pkg/api/v1"
 	"net/http"
 	"os"
+	"strings"
+	"time"
 )
 
 const (
 	RemoteAddr = "dev.dataos.io:8443"
+
+	DfRegion_CnNorth01 = "cn-north-1"
+	DfRegion_CnNorth02 = "cn-north-2"
+
+	NumDfRegions = 2
 )
 
 //=================================================
@@ -20,9 +27,21 @@ const (
 //=================================================
 
 var (
+	osAdminClients map[string]*openshift.OpenshiftClient
+
 	RechargeSercice string
 	DataFoundryHost string
 )
+
+func BuildDataFoundryClient(infoEnv string, durPhase time.Duration) *openshift.OpenshiftClient {
+	info := os.Getenv(infoEnv)
+	params := strings.Split(strings.TrimSpace(info), " ")
+	if len(params) != 3 {
+		logger.Emergency("BuildDataFoundryClient, len(params) is not correct: ", len(params))
+	}
+
+	return openshift.CreateOpenshiftClient(infoEnv, params[0], params[1], params[2], durPhase)
+}
 
 func BuildServiceUrlPrefixFromEnv(name string, isHttps bool, addrEnv string, portEnv string) string {
 	var addr string
@@ -54,8 +73,17 @@ func BuildServiceUrlPrefixFromEnv(name string, isHttps bool, addrEnv string, por
 }
 
 func InitGateWay() {
-	DataFoundryHost = BuildServiceUrlPrefixFromEnv("DataFoundryHost", true, "DATAFOUNDRY_HOST_ADDR", "")
-	openshift.Init(DataFoundryHost, os.Getenv("DATAFOUNDRY_ADMIN_USER"), os.Getenv("DATAFOUNDRY_ADMIN_PASS"))
+	//DataFoundryHost = BuildServiceUrlPrefixFromEnv("DataFoundryHost", true, "DATAFOUNDRY_HOST_ADDR", "")
+	//openshift.Init(DataFoundryHost, os.Getenv("DATAFOUNDRY_ADMIN_USER"), os.Getenv("DATAFOUNDRY_ADMIN_PASS"))
+	var durPhase time.Duration
+	phaseStep := time.Hour / NumDfRegions
+
+	osAdminClients = make(map[string]*openshift.OpenshiftClient, NumDfRegions)
+
+	osAdminClients[DfRegion_CnNorth01] = BuildDataFoundryClient("DATAFOUNDRY_INFO_CN_NORTH_1", durPhase)
+	durPhase += phaseStep
+	osAdminClients[DfRegion_CnNorth02] = BuildDataFoundryClient("DATAFOUNDRY_INFO_CN_NORTH_2", durPhase)
+	durPhase += phaseStep
 
 	RechargeSercice = BuildServiceUrlPrefixFromEnv("ChargeSercice", false, os.Getenv("ENV_NAME_DATAFOUNDRYRECHARGE_SERVICE_HOST"), os.Getenv("ENV_NAME_DATAFOUNDRYRECHARGE_SERVICE_PORT"))
 }
@@ -64,20 +92,20 @@ func InitGateWay() {
 //get username
 //=============================================================
 
-func getDFUserame(token string) (string, error) {
+func getDFUserame(token, region string) (string, error) {
 	//Logger.Info("token = ", token)
 	//if Debug {
 	//	return "liuxu", nil
 	//}
 
-	user, err := authDF(token)
+	user, err := authDF(token, region)
 	if err != nil {
 		return "", err
 	}
 	return dfUser(user), nil
 }
 
-func authDF(userToken string) (*userapi.User, error) {
+func authDF(userToken, region string) (*userapi.User, error) {
 	if Debug {
 		return &userapi.User{
 			ObjectMeta: kapi.ObjectMeta{
