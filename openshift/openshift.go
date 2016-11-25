@@ -55,11 +55,11 @@ func AdminToken() string {
 
 // for general user
 // the token must contains "Bearer "
-func NewOpenshiftClient(token string) *OpenshiftClient {
+func (baseOC *OpenshiftClient) NewOpenshiftClient(token string) *OpenshiftClient {
 	oc := &OpenshiftClient{
-		host:    theOC.host,
-		oapiUrl: theOC.oapiUrl,
-		kapiUrl: theOC.kapiUrl,
+		host:    baseOC.host,
+		oapiUrl: baseOC.oapiUrl,
+		kapiUrl: baseOC.kapiUrl,
 	}
 
 	oc.setBearerToken(token)
@@ -268,10 +268,11 @@ type OpenshiftREST struct {
 //	return &OpenshiftREST{oc: oc}
 //}
 
+//client can't be nil now!!!
 func NewOpenshiftREST(client *OpenshiftClient) *OpenshiftREST {
-	if client == nil {
-		return &OpenshiftREST{oc: adminClient()}
-	}
+	//if client == nil {
+	//	return &OpenshiftREST{oc: adminClient()}
+	//}
 	return &OpenshiftREST{oc: client}
 }
 

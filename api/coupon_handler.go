@@ -30,6 +30,7 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 		return
 	}
 
+	r.ParseForm()
 	region := r.Form.Get("region")
 	username, e := validateAuth(r.Header.Get("Authorization"), region)
 	if e != nil {
@@ -72,8 +73,8 @@ func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	logger.Info("Request url: DELETE %v.", r.URL)
 	logger.Info("Begin delete coupon handler.")
 
+	r.ParseForm()
 	region := r.Form.Get("region")
-
 	username, e := validateAuth(r.Header.Get("Authorization"), region)
 	if e != nil {
 		JsonResult(w, http.StatusUnauthorized, e, nil)
@@ -112,7 +113,9 @@ func RetrieveCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 	logger.Info("Request url: GET %v.", r.URL)
 	logger.Info("Begin retrieve coupon handler.")
 
+	r.ParseForm()
 	region := r.Form.Get("region")
+	logger.Info("region: %s", region)
 	username, e := validateAuth(r.Header.Get("Authorization"), region)
 	if e != nil {
 		JsonResult(w, http.StatusUnauthorized, e, nil)
@@ -157,6 +160,7 @@ func QueryCouponList(w http.ResponseWriter, r *http.Request, params httprouter.P
 	logger.Info("Request url: GET %v.", r.URL)
 	logger.Info("Begin retrieve coupon list handler.")
 
+	r.ParseForm()
 	region := r.Form.Get("region")
 	username, e := validateAuth(r.Header.Get("Authorization"), region)
 	if e != nil {
@@ -206,6 +210,7 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 		return
 	}
 
+	r.ParseForm()
 	region := r.Form.Get("region")
 	username, e := validateAuth(r.Header.Get("Authorization"), region)
 	if e != nil {

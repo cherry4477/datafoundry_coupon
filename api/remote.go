@@ -115,11 +115,19 @@ func authDF(userToken, region string) (*userapi.User, error) {
 	}
 
 	u := &userapi.User{}
-	osRest := openshift.NewOpenshiftREST(openshift.NewOpenshiftClient(userToken))
+	//osRest := openshift.NewOpenshiftREST(openshift.NewOpenshiftClient(userToken))
+	oc := osAdminClients[region]
+	if oc == nil {
+		return nil, fmt.Errorf("user noud found @ region (%s).")
+	}
+	oc = oc.NewOpenshiftClient(userToken)
+	osRest := openshift.NewOpenshiftREST(oc)
+
 	uri := "/users/~"
 	osRest.OGet(uri, u)
 	if osRest.Err != nil {
-		logger.Info("authDF, uri(%s) error: %s", uri, osRest.Err)
+		logger.Info("authDF, region(%s), uri(%s) error: %s", region, uri, osRest.Err)
+		//Logger.Infof("authDF, region(%s), token(%s), uri(%s) error: %s", region, userToken, uri, osRest.Err)
 		return nil, osRest.Err
 	}
 
