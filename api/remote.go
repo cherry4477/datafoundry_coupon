@@ -149,7 +149,7 @@ func couponRecharge(region, couponSerial, username, namespace string, amount flo
 	)
 
 	//RechargeSercice1 := "http://datafoundry.recharge.app.dataos.io:80"
-	url := fmt.Sprintf("%s/charge/v1/couponrecharge", RechargeSercice)
+	url := fmt.Sprintf("%s/charge/v1/couponrecharge?region=%s", RechargeSercice, region)
 
 	oc := osAdminClients[region]
 	response, data, err := common.RemoteCallWithJsonBody("POST", url, oc.BearerToken(), "", []byte(body))
