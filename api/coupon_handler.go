@@ -4,7 +4,6 @@ import (
 	"github.com/asiainfoLDP/datafoundry_coupon/common"
 	"github.com/asiainfoLDP/datafoundry_coupon/log"
 	"github.com/asiainfoLDP/datafoundry_coupon/models"
-	"github.com/asiainfoLDP/datafoundry_coupon/openshift"
 	"github.com/julienschmidt/httprouter"
 	"math/rand"
 	"net/http"
@@ -13,7 +12,7 @@ import (
 )
 
 const (
-	letterBytes = "abcdefghijklmnopqrstuvwxyz0123456789"
+	letterBytes = "abcdefghjklmnpqrstuvwxyz0123456789"
 	randNumber  = "0123456789"
 )
 
@@ -245,7 +244,7 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 		return
 	}
 
-	err = couponRecharge(openshift.AdminToken(), serial, username, useInfo.Namespace, getResult.Amount)
+	err = couponRecharge(region, serial, username, useInfo.Namespace, getResult.Amount)
 	if err != nil {
 		logger.Error("call recharge api err: %v", err)
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeCallRecharge, err.Error()), nil)

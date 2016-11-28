@@ -142,7 +142,7 @@ func dfUser(user *userapi.User) string {
 //call recharge api
 //====================================================
 
-func couponRecharge(adminToken, couponSerial, username, namespace string, amount float32) error {
+func couponRecharge(region, couponSerial, username, namespace string, amount float32) error {
 	body := fmt.Sprintf(
 		`{"namespace":"%s", "amount":%.3f, "reason":"%s", "user":"%s"}`,
 		namespace, amount, couponSerial, username,
@@ -151,7 +151,8 @@ func couponRecharge(adminToken, couponSerial, username, namespace string, amount
 	//RechargeSercice1 := "http://datafoundry.recharge.app.dataos.io:80"
 	url := fmt.Sprintf("%s/charge/v1/couponrecharge", RechargeSercice)
 
-	response, data, err := common.RemoteCallWithJsonBody("POST", url, adminToken, "", []byte(body))
+	oc := osAdminClients[region]
+	response, data, err := common.RemoteCallWithJsonBody("POST", url, oc.BearerToken(), "", []byte(body))
 	if err != nil {
 		logger.Error("recharge err: %v", err)
 		return err

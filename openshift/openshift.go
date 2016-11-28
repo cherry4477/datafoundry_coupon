@@ -29,6 +29,7 @@ import (
 	kapi "k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/util/yaml"
 	//"github.com/ghodss/yaml"
+	"github.com/asiainfoLDP/datafoundry_coupon/log"
 )
 
 //func Init(dfHost, adminUser, adminPass string) {
@@ -41,13 +42,15 @@ import (
 
 var theOC *OpenshiftClient // with admin token
 
+var logger = log.GetLogger()
+
 func adminClient() *OpenshiftClient {
 	return theOC
 }
 
-func AdminToken() string {
-	return theOC.BearerToken()
-}
+//func AdminToken() string {
+//	return theOC.BearerToken()
+//}
 
 //==============================================================
 //
@@ -98,6 +101,8 @@ func httpsAddrMaker(addr string) string {
 func CreateOpenshiftClient(name, host, username, password string, durPhase time.Duration) *OpenshiftClient {
 	host = httpsAddrMaker(host)
 	oc := &OpenshiftClient{
+		name: name,
+
 		host: host,
 		//authUrl: host + "/oauth/authorize?response_type=token&client_id=openshift-challenging-client",
 		oapiUrl: host + "/oapi/v1",
@@ -129,11 +134,11 @@ func (oc *OpenshiftClient) updateBearerToken(durPhase time.Duration) {
 		clientConfig.Insecure = true
 		//clientConfig.Version =
 
-		println("Request Token from: ", clientConfig.Host)
+		logger.Info("Request Token from: %v", clientConfig.Host)
 
 		token, err := tokencmd.RequestToken(clientConfig, nil, oc.username, oc.password)
 		if err != nil {
-			println("RequestToken error: ", err.Error())
+			logger.Error("RequestToken error: ", err.Error())
 
 			time.Sleep(15 * time.Second)
 		} else {
@@ -141,7 +146,7 @@ func (oc *OpenshiftClient) updateBearerToken(durPhase time.Duration) {
 			//oc.bearerToken = "Bearer " + token
 			oc.setBearerToken("Bearer " + token)
 
-			println(oc.name, ", RequestToken token: ", token)
+			logger.Info("Name: %v, RequestToken token: %v", oc.name, token)
 
 			// durPhase is to avoid mulitple OCs updating tokens at the same time
 			time.Sleep(3*time.Hour + durPhase)
