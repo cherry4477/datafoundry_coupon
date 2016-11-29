@@ -143,6 +143,7 @@ func dfUser(user *userapi.User) string {
 //====================================================
 
 func couponRecharge(region, couponSerial, username, namespace string, amount float32) error {
+	logger.Info("Call remote recharge....")
 	body := fmt.Sprintf(
 		`{"namespace":"%s", "amount":%.3f, "reason":"%s", "user":"%s"}`,
 		namespace, amount, couponSerial, username,
@@ -152,6 +153,7 @@ func couponRecharge(region, couponSerial, username, namespace string, amount flo
 	url := fmt.Sprintf("%s/charge/v1/couponrecharge?region=%s", RechargeSercice, region)
 
 	oc := osAdminClients[region]
+	logger.Info("Call %s recharge. token: %s", url, oc.BearerToken())
 	response, data, err := common.RemoteCallWithJsonBody("POST", url, oc.BearerToken(), "", []byte(body))
 	if err != nil {
 		logger.Error("recharge err: %v", err)
