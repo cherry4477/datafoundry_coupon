@@ -167,3 +167,22 @@ func couponRecharge(region, couponSerial, username, namespace string, amount flo
 
 	return nil
 }
+
+func fecthCouponOnPro() ([]byte, error) {
+	logger.Info("Call remote fetch conpon.")
+
+	url := "http://datafoundry.pro.coupon.app.dataos.io/charge/v1/provide/coupons"
+	resp, data, err := common.RemoteCallWithJsonBody("POST", url, "", "", nil)
+	if err != nil {
+		logger.Error("RemoteCallWithJsonBody err: %v", err)
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		logger.Info("Call remote failed :%s", string(data))
+		return nil, fmt.Errorf("makeRecharge remote (%s) status code: %d.", url, resp.StatusCode)
+	} else {
+		logger.Info(string(data))
+		return data, err
+	}
+}
