@@ -134,7 +134,7 @@ func updateCouponStatusToQ(db *sql.DB, result *retrieveResult) error {
 }
 
 func ProvideCoupon(db *sql.DB, numberStr, amountStr string) (int64, []string, error) {
-	number, err := ValidateNumber(numberStr, 10)
+	number, err := ValidateNumber(numberStr, 1)
 	if err != nil {
 		logger.Error("Catch err: %v.", err)
 		return 0, nil, err

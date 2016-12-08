@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"github.com/asiainfoLDP/datafoundry_coupon/common"
 	"github.com/asiainfoLDP/datafoundry_coupon/log"
 	"github.com/asiainfoLDP/datafoundry_coupon/models"
@@ -256,7 +257,7 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 }
 
 func ProvideCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	logger.Info("Request url: PUT %v.", r.URL)
+	logger.Info("Request url: POST %v.", r.URL)
 	logger.Info("Begin provide coupons handler.")
 
 	db := models.GetDB()
@@ -281,6 +282,11 @@ func ProvideCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 	fromUserInfo := &models.FromUser{}
 	err := common.ParseRequestJsonInto(r, fromUserInfo)
 	logger.Debug("fromUserInfo: %v.", fromUserInfo)
+
+	if fromUserInfo.OpenId == "" {
+		fromUserInfo.OpenId = genCode()
+		fromUserInfo.Provide_time = time.Now().Unix()
+	}
 
 	tm := time.Unix(fromUserInfo.Provide_time, 0)
 	timeStr := tm.Format("2006-01-02 15:04:05.999999")
@@ -324,6 +330,50 @@ func ProvideCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 
 	logger.Info("End provide coupons handler.")
 	JsonResult(w, http.StatusOK, nil, card)
+}
+
+func FetchCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	logger.Info("Request url: %s %v.", r.Method, r.URL)
+	logger.Info("Begin fetch coupons handler.")
+
+	db := models.GetDB()
+	if db == nil {
+		logger.Warn("Get db is nil.")
+		JsonResult(w, http.StatusInternalServerError, GetError(ErrorCodeDbNotInitlized), nil)
+		return
+	}
+
+	r.ParseForm()
+	env := r.Form.Get("env")
+	logger.Info("env=%s", env)
+	switch env {
+	case "dev":
+		ProvideCoupons(w, r, params)
+		break
+	case "pro":
+		data, err := fecthCouponOnPro()
+		if err != nil {
+			break
+		}
+		result := struct {
+			Code int
+			Msg  string
+			Data interface{}
+		}{}
+		card := struct {
+			IsProvide bool   `json:"isProvide"`
+			Code      string `json:"code"`
+		}{}
+		result.Data = &card
+		err = json.Unmarshal(data, &result)
+		if err != nil {
+			logger.Error("Unmarshal err: %v", err)
+			JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeCallRecharge, err.Error()), nil)
+			return
+		}
+		JsonResult(w, http.StatusOK, nil, card)
+	}
+	logger.Info("End fetch coupons handler.")
 }
 
 func genSerial() string {
