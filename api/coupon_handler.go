@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"os"
 )
 
 const (
@@ -18,6 +19,12 @@ const (
 )
 
 var logger = log.GetLogger()
+
+var AdminUsers = make([]string, 0)
+
+func init() {
+	initAdminUser()
+}
 
 func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	logger.Info("Request url: POST %v.", r.URL)
@@ -39,7 +46,7 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	}
 	logger.Debug("username:%v", username)
 
-	if !canEditSaasApps(username) {
+	if !checkAdminUsers(username) {
 		JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
 		return
 	}
@@ -82,7 +89,7 @@ func DeleteCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	}
 	logger.Debug("username:%v", username)
 
-	if !canEditSaasApps(username) {
+	if !checkAdminUsers(username) {
 		JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
 		return
 	}
@@ -169,7 +176,7 @@ func QueryCouponList(w http.ResponseWriter, r *http.Request, params httprouter.P
 	}
 	logger.Debug("username:%v", username)
 
-	if !canEditSaasApps(username) {
+	if !checkAdminUsers(username) {
 		JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
 		return
 	}
@@ -405,6 +412,22 @@ func validateAuth(token, region string) (string, *Error) {
 	return username, nil
 }
 
-func canEditSaasApps(username string) bool {
-	return username == "wangmeng5"
+func initAdminUser()  {
+	admins := os.Getenv("ADMINUSERS")
+	if admins == "" {
+		logger.Warn("Not set admin users.")
+	}
+	admins = strings.TrimSpace(admins)
+	AdminUsers = strings.Split(admins, " ")
+	logger.Info("Admin users: %v.", AdminUsers)
+}
+
+func checkAdminUsers(user string) bool {
+	for _, adminUser := range AdminUsers {
+		if adminUser == user {
+			return true
+		}
+	}
+
+	return false
 }
