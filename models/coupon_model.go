@@ -18,28 +18,6 @@ type Coupon struct {
 	Amount   float32   `json:"amount,omitempty"`
 }
 
-//type PlanRegion struct {
-//	Region          string `json:"region"`
-//	Region_describe string `json:"region_describe"`
-//	Identification  string `json:"identification"`
-//}
-
-//type Result struct {
-//	Id              int       `json:"id,omitempty"`
-//	Plan_id         string    `json:"plan_id,omitempty"`
-//	Plan_name       string    `json:"plan_name,omitempty"`
-//	Plan_type       string    `json:"plan_type,omitempty"`
-//	Plan_level      int       `json:"plan_level,omitempty"`
-//	Specification1  string    `json:"specification1,omitempty"`
-//	Specification2  string    `json:"specification2,omitempty"`
-//	Price           float32   `json:"price,omitempty"`
-//	Cycle           string    `json:"cycle,omitempty"`
-//	Region          string    `json:"region,omitempty"`
-//	Region_describe string    `json:"region_describe,omitempty"`
-//	Create_time     time.Time `json:"creation_time,omitempty"`
-//	Status          string    `json:"status,omitempty"`
-//}
-
 type createResult struct {
 	Serial string `json:"serial"`
 	Code   string `json:"code"`
