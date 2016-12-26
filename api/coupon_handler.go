@@ -8,9 +8,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"math/rand"
 	"net/http"
+	"os"
 	"strings"
 	"time"
-	"os"
 )
 
 const (
@@ -24,6 +24,12 @@ var AdminUsers = make([]string, 0)
 
 func init() {
 	initAdminUser()
+}
+
+type createInfo struct {
+	Kind     string        `json:"kind,omitempty"`
+	ExpireOn int `json:"expire_on,omitempty"`
+	Amount   float32       `json:"amount,omitempty"`
 }
 
 func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -51,14 +57,18 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 		return
 	}
 
-	coupon := &models.Coupon{}
-	err := common.ParseRequestJsonInto(r, coupon)
+	createInfo := &createInfo{}
+	err := common.ParseRequestJsonInto(r, createInfo)
 	if err != nil {
 		logger.Error("Parse body err: %v", err)
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeParseJsonFailed, err.Error()), nil)
 		return
 	}
 
+	expireDate := time.Now().Add(time.Hour * 24 * time.Duration(createInfo.ExpireOn))
+
+	coupon := &models.Coupon{}
+	coupon.ExpireOn = expireDate
 	coupon.Serial = "df" + genSerial() + "r"
 	coupon.Code = genCode()
 
@@ -412,7 +422,7 @@ func validateAuth(token, region string) (string, *Error) {
 	return username, nil
 }
 
-func initAdminUser()  {
+func initAdminUser() {
 	admins := os.Getenv("ADMINUSERS")
 	if admins == "" {
 		logger.Warn("Not set admin users.")
