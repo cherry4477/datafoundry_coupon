@@ -258,18 +258,22 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 		return
 	}
 
-	result, err := models.UseCoupon(db, useInfo)
+	callback := func() error {
+		return couponRecharge(region, serial, username, useInfo.Namespace, getResult.Amount)
+
+	}
+
+	result, err := models.UseCoupon(db, useInfo, callback)
 	if err != nil {
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeUseCoupon, err.Error()), nil)
 		return
 	}
 
-	err = couponRecharge(region, serial, username, useInfo.Namespace, getResult.Amount)
-	if err != nil {
-		logger.Error("call recharge api err: %v", err)
-		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeCallRecharge, err.Error()), nil)
-		return
-	}
+	//if err != nil {
+	//	logger.Error("call recharge api err: %v", err)
+	//	JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeCallRecharge, err.Error()), nil)
+	//	return
+	//}
 
 	logger.Info("End use a coupon handler.")
 	JsonResult(w, http.StatusOK, nil, result)
