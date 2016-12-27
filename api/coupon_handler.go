@@ -65,10 +65,12 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 		return
 	}
 
-	expireDate := time.Now().Add(time.Hour * 24 * time.Duration(createInfo.ExpireOn))
+	expireDate := time.Now().Add(time.Hour * 24 * time.Duration(createInfo.ExpireOn)).UTC()
 
 	coupon := &models.Coupon{}
 	coupon.ExpireOn = expireDate
+	coupon.Kind = createInfo.Kind
+	coupon.Amount = createInfo.Amount
 	coupon.Serial = "df" + genSerial() + "r"
 	coupon.Code = genCode()
 
