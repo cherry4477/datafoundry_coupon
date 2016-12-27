@@ -34,7 +34,7 @@ func CreateCoupon(db *sql.DB, couponInfo *Coupon) (*createResult, error) {
 	couponInfo.Serial = strings.ToLower(couponInfo.Serial)
 	couponInfo.Code = strings.ToLower(couponInfo.Code)
 	_, err := db.Exec(sqlstr,
-		couponInfo.Serial, couponInfo.Code, couponInfo.Kind, couponInfo.ExpireOn,
+		couponInfo.Serial, couponInfo.Code, couponInfo.Kind, couponInfo.ExpireOn.Format("2006-01-02"),
 		couponInfo.Amount, "available",
 	)
 	if err != nil {
