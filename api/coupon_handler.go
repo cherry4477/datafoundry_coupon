@@ -27,9 +27,9 @@ func init() {
 }
 
 type createInfo struct {
-	Kind     string        `json:"kind,omitempty"`
-	ExpireOn int `json:"expire_on,omitempty"`
-	Amount   float32       `json:"amount,omitempty"`
+	Kind     string  `json:"kind,omitempty"`
+	ExpireOn int     `json:"expire_on,omitempty"`
+	Amount   float32 `json:"amount,omitempty"`
 }
 
 func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
