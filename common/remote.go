@@ -7,12 +7,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/asiainfoLDP/datahub_commons/log"
+	"errors"
+	"github.com/asiainfoLDP/datafoundry_coupon/log"
 )
 
 const (
 	GeneralRemoteCallTimeout = 10 // seconds
 )
+
+var logger = log.GetLogger()
 
 //=============================================================
 //
@@ -87,7 +90,7 @@ func ParseRequestJsonAsMap(r *http.Request) (map[string]interface{}, error) {
 
 	m, err := ParseJsonToMap(data)
 	if err != nil {
-		log.DefaultLogger().Debugf("ParseJsonToMap r.Body (%s) error: %s", string(data), err.Error())
+		logger.Error("ParseJsonToMap r.Body (%s) error: %s", string(data), err.Error())
 	}
 
 	return m, err
@@ -97,6 +100,29 @@ func ParseRequestJsonInto(r *http.Request, into interface{}) error {
 	data, err := GetRequestData(r)
 	if err != nil {
 		return err
+	}
+
+	return json.Unmarshal(data, into)
+}
+
+func ParseRequestJsonIntoWithValidateParams(r *http.Request, correctInput []string, into interface{}) error {
+	data, err := GetRequestData(r)
+	if err != nil {
+		logger.Error("Get request data err: %v", err)
+		return err
+	}
+
+	paramsMap := make(map[string]interface{})
+	err = json.Unmarshal(data, &paramsMap)
+	if err != nil {
+		logger.Error("Unmarshal err: %v", err)
+		return err
+	}
+
+	for _, value := range correctInput {
+		if paramsMap[value] == nil {
+			return errors.New("input params not correct")
+		}
 	}
 
 	return json.Unmarshal(data, into)

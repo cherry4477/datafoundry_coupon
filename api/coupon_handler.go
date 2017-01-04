@@ -43,6 +43,7 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 		return
 	}
 
+	//分区验证token，region不一样，token也不一样
 	r.ParseForm()
 	region := r.Form.Get("region")
 	username, e := validateAuth(r.Header.Get("Authorization"), region)
@@ -52,19 +53,22 @@ func CreateCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Para
 	}
 	logger.Debug("username:%v", username)
 
+	//只有管理员才可以调这个API
 	if !checkAdminUsers(username) {
 		JsonResult(w, http.StatusUnauthorized, GetError(ErrorCodePermissionDenied), nil)
 		return
 	}
 
+	correctInput := []string{"kind", "expire_on", "amount"}
 	createInfo := &createInfo{}
-	err := common.ParseRequestJsonInto(r, createInfo)
+	err := common.ParseRequestJsonIntoWithValidateParams(r, correctInput, createInfo)
 	if err != nil {
 		logger.Error("Parse body err: %v", err)
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeParseJsonFailed, err.Error()), nil)
 		return
 	}
 
+	//转换成过期时间
 	expireDate := time.Now().Add(time.Hour * 24 * time.Duration(createInfo.ExpireOn)).UTC()
 
 	coupon := &models.Coupon{}
@@ -240,8 +244,9 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 
 	serial := params.ByName("serial")
 
+	correctInput := []string{"code", "namespace"}
 	useInfo := &models.UseInfo{}
-	err := common.ParseRequestJsonInto(r, useInfo)
+	err := common.ParseRequestJsonIntoWithValidateParams(r, correctInput, useInfo)
 	if err != nil {
 		logger.Error("Parse body err: %v", err)
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeParseJsonFailed, err.Error()), nil)
@@ -268,12 +273,6 @@ func UseCoupon(w http.ResponseWriter, r *http.Request, params httprouter.Params)
 		JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeUseCoupon, err.Error()), nil)
 		return
 	}
-
-	//if err != nil {
-	//	logger.Error("call recharge api err: %v", err)
-	//	JsonResult(w, http.StatusBadRequest, GetError2(ErrorCodeCallRecharge, err.Error()), nil)
-	//	return
-	//}
 
 	logger.Info("End use a coupon handler.")
 	JsonResult(w, http.StatusOK, nil, result)
@@ -302,8 +301,9 @@ func ProvideCoupons(w http.ResponseWriter, r *http.Request, params httprouter.Pa
 	//	return
 	//}
 
+	correctInput := []string{"openId", "provideTime"}
 	fromUserInfo := &models.FromUser{}
-	err := common.ParseRequestJsonInto(r, fromUserInfo)
+	err := common.ParseRequestJsonIntoWithValidateParams(r, correctInput, fromUserInfo)
 	logger.Debug("fromUserInfo: %v.", fromUserInfo)
 
 	if fromUserInfo.OpenId == "" {
