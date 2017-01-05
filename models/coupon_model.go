@@ -19,10 +19,10 @@ type Coupon struct {
 }
 
 type createResult struct {
-	Serial    string  `json:"serial"`
-	Code      string  `json:"code"`
-	Expire_on string  `json:"expire_on"`
-	Amount    float32 `json:"amount"`
+	Serial   string  `json:"serial"`
+	Code     string  `json:"code"`
+	ExpireOn string  `json:"expire_on"`
+	Amount   float32 `json:"amount"`
 }
 
 func CreateCoupon(db *sql.DB, couponInfo *Coupon) (*createResult, error) {
@@ -45,9 +45,9 @@ func CreateCoupon(db *sql.DB, couponInfo *Coupon) (*createResult, error) {
 	}
 
 	result := &createResult{Serial: strings.ToUpper(couponInfo.Serial),
-		Code:      strings.ToUpper(couponInfo.Code),
-		Expire_on: couponInfo.ExpireOn.Format("2006-01-02"),
-		Amount:    couponInfo.Amount,
+		Code:     strings.ToUpper(couponInfo.Code),
+		ExpireOn: couponInfo.ExpireOn.Format("2006-01-02"),
+		Amount:   couponInfo.Amount,
 	}
 
 	logger.Info("End create a plan model.")
