@@ -64,8 +64,10 @@ func updateDB() {
 	for range ticker {
 		db := GetDB()
 		if db == nil {
+			println("db is nil,re connect to db.")
 			connectDB()
 		} else if err = db.Ping(); err != nil {
+			println("ping db err:", err)
 			db.Close()
 			// setDB(nil) // draw snake feet
 			connectDB()
