@@ -2,6 +2,7 @@ package common
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -46,6 +47,10 @@ func RemoteCallWithBody(method, url string, token, user string, body []byte, con
 	}
 	client := &http.Client{
 		Timeout: time.Duration(GeneralRemoteCallTimeout) * time.Second,
+		Transport: &http.Transport{
+			DisableKeepAlives: true,
+			TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
+		},
 	}
 
 	response, err := client.Do(request)
